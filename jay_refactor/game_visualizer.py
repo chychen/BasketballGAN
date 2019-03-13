@@ -62,7 +62,7 @@ def plot_data(data, length, file_path=None, if_save=False, fps=6, dpi=128):
     Return
     ------
     """
-    court = plt.imread("./Data/court.png")  # 500*939
+    court = plt.imread("../Data/court.png")  # 500*939
     name_list = ['A1', 'A2', 'A3', 'A4', 'A5',
                  'B1', 'B2', 'B3', 'B4', 'B5','0']
 

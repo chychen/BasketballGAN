@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.contrib import layers
 from utils import DataFactory
 import ops
+import os
 
 # https://github.com/hardmaru/diff-vae-tensorflow/blob/master/model.py
 # https://medium.com/@anthony_sarkis/tensorboard-quick-start-in-5-minutes-e3ec69f673af
@@ -25,7 +26,6 @@ class WGAN_Model():
         self.features_d = config.features_d
         self.keep_prob = config.keep_prob
         self.n_resblock = config.n_resblock
-        self.log_dir = config.log_dir
 
         self.data_factory = DataFactory()
 
@@ -56,15 +56,16 @@ class WGAN_Model():
         init_ = tf.global_variables_initializer()
         self.sess = tf.Session()
         self.sess.run(init_)
-        self.saver = tf.train.Saver(max_to_keep=0)
+        self.saver = tf.train.Saver()
 
         # summary collection
         self.G_summaries = tf.summary.merge(tf.get_collection('G'))
         self.D_summaries = tf.summary.merge(tf.get_collection('D'))
         # summary writer
         self.G_summary_writer = tf.summary.FileWriter(
-            'tensorboard/G', graph=graph)
-        self.D_summary_writer = tf.summary.FileWriter('tensorboard/D')
+            os.path.join(config.folder_path,'Log/G'), graph=tf.get_default_graph())
+        self.D_summary_writer = tf.summary.FileWriter(
+            os.path.join(config.folder_path,'Log/D'))
 
     def network_(self):
         self.fake_play = self.G_(
@@ -206,7 +207,7 @@ class WGAN_Model():
             fake_o, self.fake_score = self.discriminator(
                 defence, G_offence, reuse=True, scope=scope)
 
-            self.d_o_cost, self.grad_pen = self.loss_d(
+            self.d_o_cost, self.o_grad_pen = self.loss_d(
                 defence, o_input, real_o, G_offence, fake_o, scope=scope)
 
             self.o_em_dist = tf.reduce_mean(real_o) - tf.reduce_mean(fake_o)
@@ -217,7 +218,7 @@ class WGAN_Model():
             fake_d, self.fake_scoreD = self.discriminator(
                 o_input, defence, reuse=True, scope=scope)
 
-            self.d_d_cost, self.grad2_pen = self.loss_d(
+            self.d_d_cost, self.d_grad_pen = self.loss_d(
                 o_input, self.input_d, real_d, defence, fake_d, scope=scope)
 
             self.d_em_dist = tf.reduce_mean(real_d) - tf.reduce_mean(fake_d)
@@ -229,7 +230,7 @@ class WGAN_Model():
             fake_p, self.fake_scorep = self.discriminator(
                 conds, fake_play, reuse=True, scope=scope)
 
-            self.d_p_cost, self.grad3_pen = self.loss_d(
+            self.d_p_cost, self.p_grad_pen = self.loss_d(
                 conds, real_play, real_p, fake_play, fake_p, scope=scope)
 
             self.p_em_dist = tf.reduce_mean(real_p) - tf.reduce_mean(fake_p)
@@ -248,22 +249,28 @@ class WGAN_Model():
 
         # tensorboard
         # G
-        tf.summary.scalar('loss_G_Off', self.g_o_cost, collections=['G'])
-        tf.summary.scalar('loss_G_Def', self.g_d_cost, collections=['G'])
-        tf.summary.scalar('loss_G_Play', self.g_p_cost, collections=['G'])
-        tf.summary.scalar('loss_G_ALL', self.gen_cost, collections=['G'])
+        tf.summary.scalar('loss_G_Off', self.g_o_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar('loss_G_Def', self.g_d_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar('loss_G_Play', self.g_p_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar('loss_G_ALL', self.gen_cost, collections=['G'], family='LOSS')
         # D
         d_cost = (self.d_o_cost + self.d_d_cost + self.gen_cost) / 3.0
-        tf.summary.scalar('loss_D_Off', self.d_o_cost, collections=['D'])
-        tf.summary.scalar('loss_D_Def', self.d_d_cost, collections=['D'])
-        tf.summary.scalar('loss_D_Play', self.d_p_cost, collections=['D'])
-        tf.summary.scalar('loss_D_ALL', d_cost, collections=['D'])
+        tf.summary.scalar('loss_D_Off', self.d_o_cost, collections=['D'], family='LOSS')
+        tf.summary.scalar('loss_D_Def', self.d_d_cost, collections=['D'], family='LOSS')
+        tf.summary.scalar('loss_D_Play', self.d_p_cost, collections=['D'], family='LOSS')
+        tf.summary.scalar('loss_D_ALL', d_cost, collections=['D'], family='LOSS')
+        # Grad Penalty
+        grad_pen_mean = (self.o_grad_pen + self.d_grad_pen + self.p_grad_pen) / 3.0
+        tf.summary.scalar('loss_D_Off', self.o_grad_pen, collections=['D'], family='Grad_Penalty')
+        tf.summary.scalar('loss_D_Def', self.d_grad_pen, collections=['D'], family='Grad_Penalty')
+        tf.summary.scalar('loss_D_Play', self.p_grad_pen, collections=['D'], family='Grad_Penalty')
+        tf.summary.scalar('loss_D_ALL', grad_pen_mean, collections=['D'], family='Grad_Penalty')
         # em
         em_mean = (self.o_em_dist + self.d_em_dist + self.p_em_dist) / 3.0
-        tf.summary.scalar('EM_Dist_Off', self.o_em_dist, collections=['G'])
-        tf.summary.scalar('EM_Dist_Def', self.d_em_dist, collections=['G'])
-        tf.summary.scalar('EM_Dist_Play', self.p_em_dist, collections=['G'])
-        tf.summary.scalar('EM_Dist_ALL', em_mean, collections=['G'])
+        tf.summary.scalar('EM_Dist_Off', self.o_em_dist, collections=['D'], family='EM')
+        tf.summary.scalar('EM_Dist_Def', self.d_em_dist, collections=['D'], family='EM')
+        tf.summary.scalar('EM_Dist_Play', self.p_em_dist, collections=['D'], family='EM')
+        tf.summary.scalar('EM_Dist_ALL', em_mean, collections=['D'], family='EM')
 
         self.t_vars = tf.trainable_variables()
         self.gen_vars = [var for var in self.t_vars if 'G_' in var.name]
@@ -274,7 +281,7 @@ class WGAN_Model():
         # ADAM optimizer
         self.o_optimizer = tf.train.AdamOptimizer(
             self.lr_, beta1=0.5, beta2=0.9).minimize(
-                self.d_o_cost, var_list=self.dis_vars)
+                self.d_o_cost, var_list=self.dis_vars, global_step=self.global_step)
         self.d_optimizer = tf.train.AdamOptimizer(
             self.lr_, beta1=0.5, beta2=0.9).minimize(
                 self.d_d_cost, var_list=self.dis2_vars)
@@ -284,7 +291,7 @@ class WGAN_Model():
 
         self.genO_optimizer = tf.train.AdamOptimizer(
             self.lr_, beta1=0.5, beta2=0.9).minimize(
-                self.gen_cost, var_list=self.gen_vars)
+                self.gen_cost, var_list=self.gen_vars, global_step=self.global_step)
 
     def loss_d(self, conds, real_sample, real, G_sample, fake, scope):
 
@@ -424,24 +431,8 @@ class WGAN_Model():
             self.ground_feature: feat2_
         }
 
-        _,_,_,G_summary = self.sess.run([self.o_optimizer, self.o_optimizer, self.o_optimizer, self.G_summaries], feed_dict=train_feed)
-        self.G_summary_writer.add_summary(G_summary, global_step=)
-        d_cost, real_score, grad, em, d_opt = self.sess.run(
-            (self.d_cost, self.realDisc, self.grad_pen, self.em_dist,
-             self.o_optimizer),
-            feed_dict=train_feed)
-
-        d2_cost, real2_score, grad2, em2, d2_opt = self.sess.run(
-            (self.d2_cost, self.realDisc2, self.grad2_pen, self.em2_dist,
-             self.d_optimizer),
-            feed_dict=train_feed)
-
-        d3_cost, real3_score, grad3, em3, d3_opt = self.sess.run(
-            (self.d3_cost, self.realDisc3, self.grad3_pen, self.em3_dist,
-             self.p_optimizer),
-            feed_dict=train_feed)
-
-        return d_cost, grad, em, d2_cost, grad2, em2, d3_cost, grad3, em3
+        _,_,_,D_summary, g_step = self.sess.run([self.o_optimizer, self.d_optimizer, self.p_optimizer, self.D_summaries, self.global_step], feed_dict=train_feed)
+        self.D_summary_writer.add_summary(D_summary, global_step=g_step)
 
     def update_gen(self, real, real_d, x, x2, x3, z):
         train_feed = {
@@ -453,30 +444,22 @@ class WGAN_Model():
             self.z_sample: z
         }
 
-        g_opt, g_cost, def_cost, p_cost, gen_cost, pen, open_pen = self.sess.run(
-            (self.genO_optimizer, self.g_cost, self.g2_cost, self.g3_cost,
-             self.gen_cost, self.penalty, self.open_penalty),
-            feed_dict=train_feed)
-
-        return g_cost, def_cost, p_cost, gen_cost, pen, open_pen
-
-    def valid_loss(self, x, x2, y, feat_, feat2_, z):
-        train_feed = {
-            self.input_: x,
-            self.input_d: x2,
-            self.seq_input: y,
-            self.seq_feature: feat_,
-            self.z_sample: z,
-            self.ground_feature: feat2_
-        }
-
-        valid_cost = self.sess.run((self.d_cost), feed_dict=train_feed)
-
-        valid2_cost = self.sess.run((self.d2_cost), feed_dict=train_feed)
-
-        valid3_cost = self.sess.run((self.d3_cost), feed_dict=train_feed)
-
-        return valid_cost, valid2_cost, valid3_cost
+        _,G_summary, g_step = self.sess.run([self.genO_optimizer, self.G_summaries, self.global_step], feed_dict=train_feed)
+        self.G_summary_writer.add_summary(G_summary, global_step=g_step)
+        
+#     def valid_loss(self, x, x2, y, feat_, feat2_, z):
+#         train_feed = {
+#             self.input_: x,
+#             self.input_d: x2,
+#             self.seq_input: y,
+#             self.seq_feature: feat_,
+#             self.z_sample: z,
+#             self.ground_feature: feat2_
+#         }
+#         valid_cost = self.sess.run((self.d_cost), feed_dict=train_feed)
+#         valid2_cost = self.sess.run((self.d2_cost), feed_dict=train_feed)
+#         valid3_cost = self.sess.run((self.d3_cost), feed_dict=train_feed)
+#         return valid_cost, valid2_cost, valid3_cost
 
     # Sampling
     def reconstruct_(self, x, z, x2):
@@ -489,17 +472,15 @@ class WGAN_Model():
             })
 
     def get_score(self, sample, feat_, seq):
-
         train_feed = {
             self.fake_play: sample,
             self.seq_feature: feat_,
             self.seq_input: seq
         }
-
         return self.sess.run(self.fake_scorep, feed_dict=train_feed)
 
-    def save_model(self, checkpoint_path, epoch):
-        self.saver.save(self.sess, checkpoint_path, global_step=epoch)
+    def save_model(self, checkpoint_path):
+        self.saver.save(self.sess, checkpoint_path, global_step=self.global_step)
 
     def load_model(self, checkpoint_path):
         self.saver.restore(self.sess, checkpoint_path)

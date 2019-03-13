@@ -5,15 +5,15 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 import os
+import shutil
 from utils import DataFactory
 from ThreeDiscrim import WGAN_Model
 import game_visualizer
 import matplotlib.pyplot as plt
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('folder_path', './Data/', 'summeray directory')
+tf.app.flags.DEFINE_string('folder_path', './v1/', 'summeray directory')
 tf.app.flags.DEFINE_string('check_point', None, 'summary directory')
-tf.app.flags.DEFINE_string('log_dir', './Log', 'Log summary tensorboard')
 tf.app.flags.DEFINE_string('data_path', '../Data/', 'summary directory')
 tf.app.flags.DEFINE_integer('batch_size', 128, 'batch size of input')
 tf.app.flags.DEFINE_integer('latent_dims', 150, 'dimension of latent variable')
@@ -33,13 +33,13 @@ tf.app.flags.DEFINE_integer('checkpoint_step', 25,
                             'number of steps before saving checkpoint')
 
 CHECKPOINT_PATH = os.path.join(FLAGS.folder_path, 'Checkpoints/')
-BASELINE_PATH = os.path.join(FLAGS.folder_path, 'baseline/')
 SAMPLE_PATH = os.path.join(FLAGS.folder_path, 'Samples/')
 
 
 class Training_config(object):
     #Training configurations
     def __init__(self):
+        self.folder_path = FLAGS.folder_path
         self.checkpoint_path = FLAGS.check_point
         self.data_path = FLAGS.data_path
         self.batch_size = FLAGS.batch_size
@@ -52,10 +52,9 @@ class Training_config(object):
         self.dlr_ = FLAGS.dlr_
         self.keep_prob = FLAGS.keep_prob
         self.n_resblock = FLAGS.n_resblock
-        self.log_dir = FLAGS.log_dir
 
     def show(self):
-        print("Start")
+        print(vars(self))
 
 
 #Generate sample
@@ -86,7 +85,7 @@ class Trainer(object):
         while True:
             if self.epoch_id > 0 and self.epoch_id % FLAGS.checkpoint_step == 0:
                 checkpoint_ = os.path.join(CHECKPOINT_PATH, 'model.ckpt')
-                self.model.save_model(checkpoint_, self.epoch_id)
+                self.model.save_model(checkpoint_)
                 print("Saved model:", checkpoint_)
 
             if self.epoch_id < FLAGS.pretrain_D == 0:  # warming
@@ -124,7 +123,8 @@ class Trainer(object):
             #       "\nLambda = {}".format(FLAGS.lambda_))
 
             #Show generated sample
-            if self.epoch_id % 20 == 0:
+            if self.epoch_id % 10 == 0 and self.epoch_id > 0:
+                print('epoch_id:', self.epoch_id)
                 data_idx = self.batch_id * FLAGS.batch_size % self.num_data
                 f_train = self.data_factory.f_train
                 seq_train = self.data_factory.seq_train
@@ -141,8 +141,7 @@ class Trainer(object):
                     file_path=SAMPLE_PATH +
                     'reconstruct{}.mp4'.format(self.epoch_id),
                     if_save=True)
-
-            self.update_batch_id_and_shuffle()
+                
 
     def train_G(self):
         data_idx = self.batch_id * FLAGS.batch_size % self.num_data
@@ -160,7 +159,7 @@ class Trainer(object):
 
         real_feat = rf_train[data_idx:data_idx + FLAGS.batch_size]
 
-        o_gen, def_gen, play_gen, gen, pen, o_pen = self.model.update_gen(
+        self.model.update_gen(
             real=real_,
             real_d=real_D,
             x=seq_,
@@ -186,7 +185,7 @@ class Trainer(object):
 
         real_feat = rf_train[data_idx:data_idx + FLAGS.batch_size]
 
-        d_, em, grad_, d2_, em2, grad2, d3_, em3, grad3 = self.model.update_discrim(
+        self.model.update_discrim(
             x=real_,
             x2=real_D,
             y=seq_,
@@ -230,6 +229,14 @@ def main(_):
 
 
 if __name__ == '__main__':
+    if os.path.exists(FLAGS.folder_path):
+        ans = input('"%s" will be removed!! are you sure (y/N)? ' % FLAGS.folder_path)
+        if ans == 'Y' or ans == 'y':
+            # when not restore, remove follows (old) for new training
+            shutil.rmtree(FLAGS.folder_path)
+            print('rm -rf "%s" complete!' % FLAGS.folder_path)
+        else:
+            exit()
     if not os.path.exists(CHECKPOINT_PATH):
         os.makedirs(CHECKPOINT_PATH)
     if not os.path.exists(SAMPLE_PATH):
