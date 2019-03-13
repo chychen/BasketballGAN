@@ -182,7 +182,7 @@ class Trainer(object):
                 self.model.save_model(checkpoint_)
                 print("Saved model:", checkpoint_)
             # save generated sample
-            if self.epoch_id % 10 == 0 and batch_id != tmp_batch_id:
+            if self.epoch_id % 10 == 0:
                 print('epoch_id:', self.epoch_id)
                 data_idx = self.batch_id * FLAGS.batch_size % self.num_data
                 f_train = self.data_factory.f_train
