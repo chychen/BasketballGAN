@@ -83,10 +83,6 @@ class Trainer(object):
 
     def __call__(self):
         while True:
-            if self.epoch_id > 0 and self.epoch_id % FLAGS.checkpoint_step == 0:
-                checkpoint_ = os.path.join(CHECKPOINT_PATH, 'model.ckpt')
-                self.model.save_model(checkpoint_)
-                print("Saved model:", checkpoint_)
 
             if self.epoch_id < FLAGS.pretrain_D == 0:  # warming
                 num_d = 10
@@ -121,27 +117,6 @@ class Trainer(object):
             # print("Epoch:", '%04d' % (epoch_id),
             #       "\nDiscrim = {}".format(d_cost), "\nGen = {}".format(g_cost),
             #       "\nLambda = {}".format(FLAGS.lambda_))
-
-            #Show generated sample
-            if self.epoch_id % 10 == 0 and self.epoch_id > 0:
-                print('epoch_id:', self.epoch_id)
-                data_idx = self.batch_id * FLAGS.batch_size % self.num_data
-                f_train = self.data_factory.f_train
-                seq_train = self.data_factory.seq_train
-                seq_feat = f_train[data_idx:data_idx + FLAGS.batch_size]
-                seq_ = seq_train[data_idx:data_idx + FLAGS.batch_size]
-
-                recon = reconstruct_(self.model, seq_, z_samples(), seq_feat)
-                sample = recon[:, :, :22]
-                samples = self.data_factory.recover_BALL_and_A(sample)
-                samples = self.data_factory.recover_B(samples)
-                game_visualizer.plot_data(
-                    samples[0],
-                    FLAGS.seq_length,
-                    file_path=SAMPLE_PATH +
-                    'reconstruct{}.mp4'.format(self.epoch_id),
-                    if_save=True)
-                
 
     def train_G(self):
         data_idx = self.batch_id * FLAGS.batch_size % self.num_data
@@ -201,6 +176,30 @@ class Trainer(object):
             self.epoch_id = self.epoch_id + 1
             self.batch_id = 0
             self.data_factory.shuffle()
+            # save model
+            if self.epoch_id > 0 and self.epoch_id % FLAGS.checkpoint_step == 0:
+                checkpoint_ = os.path.join(CHECKPOINT_PATH, 'model.ckpt')
+                self.model.save_model(checkpoint_)
+                print("Saved model:", checkpoint_)
+            # save generated sample
+            if self.epoch_id % 10 == 0 and batch_id != tmp_batch_id:
+                print('epoch_id:', self.epoch_id)
+                data_idx = self.batch_id * FLAGS.batch_size % self.num_data
+                f_train = self.data_factory.f_train
+                seq_train = self.data_factory.seq_train
+                seq_feat = f_train[data_idx:data_idx + FLAGS.batch_size]
+                seq_ = seq_train[data_idx:data_idx + FLAGS.batch_size]
+
+                recon = reconstruct_(self.model, seq_, z_samples(), seq_feat)
+                sample = recon[:, :, :22]
+                samples = self.data_factory.recover_BALL_and_A(sample)
+                samples = self.data_factory.recover_B(samples)
+                game_visualizer.plot_data(
+                    samples[0],
+                    FLAGS.seq_length,
+                    file_path=SAMPLE_PATH + 'reconstruct{}.mp4'.format(
+                        self.epoch_id),
+                    if_save=True)
 
 
 def main(_):
@@ -230,7 +229,8 @@ def main(_):
 
 if __name__ == '__main__':
     if os.path.exists(FLAGS.folder_path):
-        ans = input('"%s" will be removed!! are you sure (y/N)? ' % FLAGS.folder_path)
+        ans = input(
+            '"%s" will be removed!! are you sure (y/N)? ' % FLAGS.folder_path)
         if ans == 'Y' or ans == 'y':
             # when not restore, remove follows (old) for new training
             shutil.rmtree(FLAGS.folder_path)
