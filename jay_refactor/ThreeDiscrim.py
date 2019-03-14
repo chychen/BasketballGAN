@@ -111,22 +111,23 @@ class WGAN_Model():
                     n_filters=self.n_filters,
                     n_layers=2,
                     residual_alpha=1.0,
+                    pad='valid'
                 )
                 next_input = res_b
 
             with tf.variable_scope('conv_result') as scope:
                 normed = layers.layer_norm(next_input)
                 nonlinear = ops.leaky_relu(normed)
+                padded = tf.concat([nonlinear[:,0:2], nonlinear, nonlinear[:,-2:]], axis=1)
                 conv_result = tf.layers.conv1d(
-                    inputs=nonlinear,
+                    inputs=padded,
                     filters=28,
                     kernel_size=5,
                     strides=1,
-                    padding='same',
+                    padding='valid',
                     activation=None,
                     kernel_initializer=layers.xavier_initializer(),
                     bias_initializer=tf.zeros_initializer())
-
             return conv_result
 
 

@@ -12,15 +12,16 @@ def leaky_relu(x, leak=0.2, name='relu'):
 
 
 def res_block(name, inputs, n_filters, n_layers=2, residual_alpha=1.0, leaky_relu_alpha=0.2, strides=1,
-              pad='same', channel='channels_last'):
+              pad='valid', channel='channels_last'):
     with tf.variable_scope(name):
         next_input = inputs
         for i in range(n_layers):
             with tf.variable_scope('conv' + str(i)) as scope:
                 normed = layers.layer_norm(next_input)
                 nonlinear = leaky_relu(normed, leak=leaky_relu_alpha)
+                padded = tf.concat([nonlinear[:,0:2], nonlinear, nonlinear[:,-2:]], axis=1)
                 conv = tf.layers.conv1d(
-                    inputs=nonlinear,
+                    inputs=padded,
                     filters=n_filters,
                     kernel_size=5,
                     strides=strides,

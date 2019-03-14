@@ -204,11 +204,10 @@ class Trainer(object):
 
 def main(_):
     with tf.get_default_graph().as_default() as graph:
-        real_data = np.load(FLAGS.data_path +
-                            '/F50_D.npy')[:, :FLAGS.seq_length, :, :]
-        seq_data = np.load(FLAGS.data_path + '/50seq.npy')
-        features_ = np.load('../Data/SeqCond.npy')
-        real_feat = np.load('../Data/RealCond.npy')
+        real_data = np.load(os.path.join(FLAGS.data_path, '50Real.npy'))[:, :FLAGS.seq_length, :, :]
+        seq_data = np.load(os.path.join(FLAGS.data_path, '50Seq.npy'))
+        features_ = np.load(os.path.join(FLAGS.data_path, 'SeqCond.npy'))
+        real_feat = np.load(os.path.join(FLAGS.data_path, 'RealCond.npy'))
 
         print("Real Data: ", real_data.shape)
         print("Seq Data: ", seq_data.shape)
