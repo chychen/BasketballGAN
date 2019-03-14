@@ -78,12 +78,16 @@ class Trainer(object):
         self.model = WGAN_Model(config)
         self.num_data = self.data_factory.train_data['A'].shape[0]
         self.num_batch = self.num_data // FLAGS.batch_size
+        self.num_batch_valid = self.data_factory.valid_data['A'].shape[
+            0] // FLAGS.batch_size
         self.epoch_id = 0
         self.batch_id = 0
+        self.batch_id_valid = 0
+        print('self.num_batch:', self.num_batch)
+        print('self.num_batch_valid:', self.num_batch_valid)
 
     def __call__(self):
         while True:
-
             if self.epoch_id < FLAGS.pretrain_D == 0:  # warming
                 num_d = 10
             else:
@@ -93,33 +97,32 @@ class Trainer(object):
                 self.train_D()
 
             self.train_G()
-
             # validation
-            # TODO validation
-            # valid_idx = batch_id * FLAGS.batch_size % (
-            #     valid_data['A'].shape[0] - FLAGS.batch_size)
-            # valid_ = valid_data['A'][valid_idx:valid_idx + FLAGS.batch_size]
-            # valid_D = valid_data['B'][valid_idx:valid_idx + FLAGS.batch_size]
+            valid_idx = self.batch_id_valid * FLAGS.batch_size
+            valid_ = self.data_factory.valid_data['A'][valid_idx:valid_idx +
+                                                       FLAGS.batch_size]
+            valid_D = self.data_factory.valid_data['B'][valid_idx:valid_idx +
+                                                        FLAGS.batch_size]
 
-            # valid_ = valid_[:, :, [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
-            # seq_v = seq_valid[valid_idx:valid_idx + FLAGS.batch_size]
-            # rv_feat = f_valid[valid_idx:valid_idx + FLAGS.batch_size]
-            # rfv_feat = rf_valid[valid_idx:valid_idx + FLAGS.batch_size]
+            valid_ = valid_[:, :, [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
+            seq_v = self.data_factory.seq_valid[valid_idx:valid_idx +
+                                                FLAGS.batch_size]
+            rv_feat = self.data_factory.f_valid[valid_idx:valid_idx +
+                                                FLAGS.batch_size]
+            rfv_feat = self.data_factory.rf_valid[valid_idx:valid_idx +
+                                                  FLAGS.batch_size]
 
-            # valid_cost, valid_def, valid_play = vae.valid_loss(
-            #     x=valid_,
-            #     x2=valid_D,
-            #     y=seq_v,
-            #     z=z_samples(),
-            #     feat_=rv_feat,
-            #     feat2_=rfv_feat)
-
-            # print("Epoch:", '%04d' % (epoch_id),
-            #       "\nDiscrim = {}".format(d_cost), "\nGen = {}".format(g_cost),
-            #       "\nLambda = {}".format(FLAGS.lambda_))
+            self.model.valid_loss(
+                x=valid_,
+                x2=valid_D,
+                y=seq_v,
+                z=z_samples(),
+                feat_=rv_feat,
+                feat2_=rfv_feat)
+            self.update_batch_id_valid_and_shuffle()
 
     def train_G(self):
-        data_idx = self.batch_id * FLAGS.batch_size % self.num_data
+        data_idx = self.batch_id * FLAGS.batch_size
         training_data = self.data_factory.train_data
         f_train = self.data_factory.f_train
         seq_train = self.data_factory.seq_train
@@ -145,7 +148,7 @@ class Trainer(object):
         self.update_batch_id_and_shuffle()
 
     def train_D(self):
-        data_idx = self.batch_id * FLAGS.batch_size % self.num_data
+        data_idx = self.batch_id * FLAGS.batch_size
         training_data = self.data_factory.train_data
         f_train = self.data_factory.f_train
         seq_train = self.data_factory.seq_train
@@ -170,12 +173,18 @@ class Trainer(object):
 
         self.update_batch_id_and_shuffle()
 
+    def update_batch_id_valid_and_shuffle(self):
+        self.batch_id_valid = self.batch_id_valid + 1
+        if self.batch_id_valid >= self.num_batch_valid:
+            self.batch_id_valid = 0
+            self.data_factory.shuffle_valid()
+
     def update_batch_id_and_shuffle(self):
         self.batch_id = self.batch_id + 1
         if self.batch_id >= self.num_batch:
             self.epoch_id = self.epoch_id + 1
             self.batch_id = 0
-            self.data_factory.shuffle()
+            self.data_factory.shuffle_train()
             # save model
             if self.epoch_id % FLAGS.checkpoint_step == 0:
                 checkpoint_ = os.path.join(CHECKPOINT_PATH, 'model.ckpt')
@@ -184,7 +193,7 @@ class Trainer(object):
             # save generated sample
             if self.epoch_id % 10 == 0:
                 print('epoch_id:', self.epoch_id)
-                data_idx = self.batch_id * FLAGS.batch_size % self.num_data
+                data_idx = self.batch_id * FLAGS.batch_size
                 f_train = self.data_factory.f_train
                 seq_train = self.data_factory.seq_train
                 seq_feat = f_train[data_idx:data_idx + FLAGS.batch_size]
@@ -204,7 +213,8 @@ class Trainer(object):
 
 def main(_):
     with tf.get_default_graph().as_default() as graph:
-        real_data = np.load(os.path.join(FLAGS.data_path, '50Real.npy'))[:, :FLAGS.seq_length, :, :]
+        real_data = np.load(os.path.join(
+            FLAGS.data_path, '50Real.npy'))[:, :FLAGS.seq_length, :, :]
         seq_data = np.load(os.path.join(FLAGS.data_path, '50Seq.npy'))
         features_ = np.load(os.path.join(FLAGS.data_path, 'SeqCond.npy'))
         real_feat = np.load(os.path.join(FLAGS.data_path, 'RealCond.npy'))

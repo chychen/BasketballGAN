@@ -130,15 +130,15 @@ class DataFactory(object):
             self.__norm_dict['y']['stddev'] + self.__norm_dict['y']['mean']
         return norm_data
 
-    def shuffle(self):
+    def shuffle_train(self):
         shuffled_indexes = np.random.permutation(self.train_data['A'].shape[0])
         self.train_data['A'] = self.train_data['A'][shuffled_indexes]
         self.train_data['B'] = self.train_data['B'][shuffled_indexes]
-
         self.seq_train = self.seq_train[shuffled_indexes]
         self.f_train = self.f_train[shuffled_indexes]
         self.rf_train = self.rf_train[shuffled_indexes]
 
+    def shuffle_valid(self):
         shuffled_indexes = np.random.permutation(self.valid_data['A'].shape[0])
         self.valid_data['A'] = self.valid_data['A'][shuffled_indexes]
         self.valid_data['B'] = self.valid_data['B'][shuffled_indexes]

@@ -63,9 +63,12 @@ class WGAN_Model():
         self.D_summaries = tf.summary.merge(tf.get_collection('D'))
         # summary writer
         self.G_summary_writer = tf.summary.FileWriter(
-            os.path.join(config.folder_path,'Log/G'), graph=tf.get_default_graph())
+            os.path.join(config.folder_path, 'Log/G'),
+            graph=tf.get_default_graph())
         self.D_summary_writer = tf.summary.FileWriter(
-            os.path.join(config.folder_path,'Log/D'))
+            os.path.join(config.folder_path, 'Log/D'))
+        self.D_valid_summary_writer = tf.summary.FileWriter(
+            os.path.join(config.folder_path, 'Log/D_valid'))
 
     def network_(self):
         self.fake_play = self.G_(
@@ -111,14 +114,14 @@ class WGAN_Model():
                     n_filters=self.n_filters,
                     n_layers=2,
                     residual_alpha=1.0,
-                    pad='valid'
-                )
+                    pad='valid')
                 next_input = res_b
 
             with tf.variable_scope('conv_result') as scope:
                 normed = layers.layer_norm(next_input)
                 nonlinear = ops.leaky_relu(normed)
-                padded = tf.concat([nonlinear[:,0:2], nonlinear, nonlinear[:,-2:]], axis=1)
+                padded = tf.concat(
+                    [nonlinear[:, 0:2], nonlinear, nonlinear[:, -2:]], axis=1)
                 conv_result = tf.layers.conv1d(
                     inputs=padded,
                     filters=28,
@@ -244,39 +247,83 @@ class WGAN_Model():
         scale_d = tf.abs(self.g_d_cost)
         self.penalty = self.dribbler_penalty(fake_play, real_play)
         self.open_penalty = self._open_shot_penalty(real_play, fake_play)
-        self.gen_cost = (0.9 * self.g_o_cost) + (
-            0.9 * (self.g_d_cost)
-        ) + self.g_p_cost + (scale_o*self.penalty) + (scale_d*self.open_penalty)
+        #         self.gen_cost = 0.9 * self.g_o_cost + 0.9 * self.g_d_cost + self.g_p_cost + scale_o * self.penalty + scale_d * self.open_penalty
+        self.gen_cost = self.g_o_cost + self.g_d_cost + self.g_p_cost + scale_o * self.penalty + scale_d * self.open_penalty
 
         # tensorboard
         # Penalty
-        tf.summary.scalar('open_penalty', self.open_penalty, collections=['G'], family='Penalty')
-        tf.summary.scalar('dribble_penalty', self.penalty, collections=['G'], family='Penalty')
-        tf.summary.scalar('open_penalty_scaled', scale_d*self.open_penalty, collections=['G'], family='Penalty')
-        tf.summary.scalar('dribble_penalty_scaled', scale_o*self.penalty, collections=['G'], family='Penalty')
+        tf.summary.scalar(
+            'open_penalty',
+            self.open_penalty,
+            collections=['G'],
+            family='Penalty')
+        tf.summary.scalar(
+            'dribble_penalty',
+            self.penalty,
+            collections=['G'],
+            family='Penalty')
+        tf.summary.scalar(
+            'open_penalty_scaled',
+            scale_d * self.open_penalty,
+            collections=['G'],
+            family='Penalty')
+        tf.summary.scalar(
+            'dribble_penalty_scaled',
+            scale_o * self.penalty,
+            collections=['G'],
+            family='Penalty')
         # G
-        tf.summary.scalar('loss_G_Off', self.g_o_cost, collections=['G'], family='LOSS')
-        tf.summary.scalar('loss_G_Def', self.g_d_cost, collections=['G'], family='LOSS')
-        tf.summary.scalar('loss_G_Play', self.g_p_cost, collections=['G'], family='LOSS')
-        tf.summary.scalar('loss_G_ALL', self.gen_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar(
+            'loss_G_Off', self.g_o_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar(
+            'loss_G_Def', self.g_d_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar(
+            'loss_G_Play', self.g_p_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar(
+            'loss_G_ALL', self.gen_cost, collections=['G'], family='LOSS')
         # D
         d_cost = (self.d_o_cost + self.d_d_cost + self.gen_cost) / 3.0
-        tf.summary.scalar('loss_D_Off', self.d_o_cost, collections=['D'], family='LOSS')
-        tf.summary.scalar('loss_D_Def', self.d_d_cost, collections=['D'], family='LOSS')
-        tf.summary.scalar('loss_D_Play', self.d_p_cost, collections=['D'], family='LOSS')
-        tf.summary.scalar('loss_D_ALL', d_cost, collections=['D'], family='LOSS')
+        tf.summary.scalar(
+            'loss_D_Off', self.d_o_cost, collections=['D'], family='LOSS')
+        tf.summary.scalar(
+            'loss_D_Def', self.d_d_cost, collections=['D'], family='LOSS')
+        tf.summary.scalar(
+            'loss_D_Play', self.d_p_cost, collections=['D'], family='LOSS')
+        tf.summary.scalar(
+            'loss_D_ALL', d_cost, collections=['D'], family='LOSS')
         # Grad Penalty
-        grad_pen_mean = (self.o_grad_pen + self.d_grad_pen + self.p_grad_pen) / 3.0
-        tf.summary.scalar('grad_penalty_Off', self.o_grad_pen, collections=['D'], family='Penalty')
-        tf.summary.scalar('grad_penalty_Def', self.d_grad_pen, collections=['D'], family='Penalty')
-        tf.summary.scalar('grad_penalty_Play', self.p_grad_pen, collections=['D'], family='Penalty')
-        tf.summary.scalar('grad_penalty_ALL', grad_pen_mean, collections=['D'], family='Penalty')
+        grad_pen_mean = (
+            self.o_grad_pen + self.d_grad_pen + self.p_grad_pen) / 3.0
+        tf.summary.scalar(
+            'grad_penalty_Off',
+            self.o_grad_pen,
+            collections=['D'],
+            family='Penalty')
+        tf.summary.scalar(
+            'grad_penalty_Def',
+            self.d_grad_pen,
+            collections=['D'],
+            family='Penalty')
+        tf.summary.scalar(
+            'grad_penalty_Play',
+            self.p_grad_pen,
+            collections=['D'],
+            family='Penalty')
+        tf.summary.scalar(
+            'grad_penalty_ALL',
+            grad_pen_mean,
+            collections=['D'],
+            family='Penalty')
         # em
         em_mean = (self.o_em_dist + self.d_em_dist + self.p_em_dist) / 3.0
-        tf.summary.scalar('EM_Dist_Off', self.o_em_dist, collections=['D'], family='EM')
-        tf.summary.scalar('EM_Dist_Def', self.d_em_dist, collections=['D'], family='EM')
-        tf.summary.scalar('EM_Dist_Play', self.p_em_dist, collections=['D'], family='EM')
-        tf.summary.scalar('EM_Dist_ALL', em_mean, collections=['D'], family='EM')
+        tf.summary.scalar(
+            'EM_Dist_Off', self.o_em_dist, collections=['D'], family='EM')
+        tf.summary.scalar(
+            'EM_Dist_Def', self.d_em_dist, collections=['D'], family='EM')
+        tf.summary.scalar(
+            'EM_Dist_Play', self.p_em_dist, collections=['D'], family='EM')
+        tf.summary.scalar(
+            'EM_Dist_ALL', em_mean, collections=['D'], family='EM')
 
         self.t_vars = tf.trainable_variables()
         self.gen_vars = [var for var in self.t_vars if 'G_' in var.name]
@@ -287,7 +334,9 @@ class WGAN_Model():
         # ADAM optimizer
         self.o_optimizer = tf.train.AdamOptimizer(
             self.lr_, beta1=0.5, beta2=0.9).minimize(
-                self.d_o_cost, var_list=self.dis_vars, global_step=self.global_step)
+                self.d_o_cost,
+                var_list=self.dis_vars,
+                global_step=self.global_step)
         self.d_optimizer = tf.train.AdamOptimizer(
             self.lr_, beta1=0.5, beta2=0.9).minimize(
                 self.d_d_cost, var_list=self.dis2_vars)
@@ -297,7 +346,9 @@ class WGAN_Model():
 
         self.genO_optimizer = tf.train.AdamOptimizer(
             self.lr_, beta1=0.5, beta2=0.9).minimize(
-                self.gen_cost, var_list=self.gen_vars, global_step=self.global_step)
+                self.gen_cost,
+                var_list=self.gen_vars,
+                global_step=self.global_step)
 
     def loss_d(self, conds, real_sample, real, G_sample, fake, scope):
 
@@ -437,7 +488,11 @@ class WGAN_Model():
             self.ground_feature: feat2_
         }
 
-        _,_,_,D_summary, g_step = self.sess.run([self.o_optimizer, self.d_optimizer, self.p_optimizer, self.D_summaries, self.global_step], feed_dict=train_feed)
+        _, _, _, D_summary, g_step = self.sess.run([
+            self.o_optimizer, self.d_optimizer, self.p_optimizer,
+            self.D_summaries, self.global_step
+        ],
+                                                   feed_dict=train_feed)
         self.D_summary_writer.add_summary(D_summary, global_step=g_step)
 
     def update_gen(self, real, real_d, x, x2, x3, z):
@@ -450,22 +505,24 @@ class WGAN_Model():
             self.z_sample: z
         }
 
-        _,G_summary, g_step = self.sess.run([self.genO_optimizer, self.G_summaries, self.global_step], feed_dict=train_feed)
+        _, G_summary, g_step = self.sess.run(
+            [self.genO_optimizer, self.G_summaries, self.global_step],
+            feed_dict=train_feed)
         self.G_summary_writer.add_summary(G_summary, global_step=g_step)
-        
-#     def valid_loss(self, x, x2, y, feat_, feat2_, z):
-#         train_feed = {
-#             self.input_: x,
-#             self.input_d: x2,
-#             self.seq_input: y,
-#             self.seq_feature: feat_,
-#             self.z_sample: z,
-#             self.ground_feature: feat2_
-#         }
-#         valid_cost = self.sess.run((self.d_cost), feed_dict=train_feed)
-#         valid2_cost = self.sess.run((self.d2_cost), feed_dict=train_feed)
-#         valid3_cost = self.sess.run((self.d3_cost), feed_dict=train_feed)
-#         return valid_cost, valid2_cost, valid3_cost
+
+    def valid_loss(self, x, x2, y, feat_, feat2_, z):
+        train_feed = {
+            self.input_: x,
+            self.input_d: x2,
+            self.seq_input: y,
+            self.seq_feature: feat_,
+            self.z_sample: z,
+            self.ground_feature: feat2_
+        }
+        D_valid_summary, g_step = self.sess.run(
+            [self.D_summaries, self.global_step], feed_dict=train_feed)
+        self.D_valid_summary_writer.add_summary(
+            D_valid_summary, global_step=g_step)
 
     # Sampling
     def reconstruct_(self, x, z, x2):
@@ -486,7 +543,8 @@ class WGAN_Model():
         return self.sess.run(self.fake_scorep, feed_dict=train_feed)
 
     def save_model(self, checkpoint_path):
-        self.saver.save(self.sess, checkpoint_path, global_step=self.global_step)
+        self.saver.save(
+            self.sess, checkpoint_path, global_step=self.global_step)
 
     def load_model(self, checkpoint_path):
         self.saver.restore(self.sess, checkpoint_path)
