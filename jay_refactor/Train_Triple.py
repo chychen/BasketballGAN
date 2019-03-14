@@ -177,7 +177,7 @@ class Trainer(object):
             self.batch_id = 0
             self.data_factory.shuffle()
             # save model
-            if self.epoch_id > 0 and self.epoch_id % FLAGS.checkpoint_step == 0:
+            if self.epoch_id % FLAGS.checkpoint_step == 0:
                 checkpoint_ = os.path.join(CHECKPOINT_PATH, 'model.ckpt')
                 self.model.save_model(checkpoint_)
                 print("Saved model:", checkpoint_)

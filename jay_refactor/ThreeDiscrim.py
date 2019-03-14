@@ -239,15 +239,20 @@ class WGAN_Model():
         self.g_o_cost = -tf.reduce_mean(fake_o)
         self.g_d_cost = -tf.reduce_mean(fake_d)
         self.g_p_cost = -tf.reduce_mean(fake_p)
-        # scale = tf.abs(self.g_cost)
-        # scale2 = tf.abs(self.g2_cost)
-        # self.penalty = self.dribbler_penalty(self.fake_play,real_play)
-        # self.open_penalty = self._open_shot_penalty(real_play,self.fake_play)
+        scale_o = tf.abs(self.g_o_cost)
+        scale_d = tf.abs(self.g_d_cost)
+        self.penalty = self.dribbler_penalty(fake_play, real_play)
+        self.open_penalty = self._open_shot_penalty(real_play, fake_play)
         self.gen_cost = (0.9 * self.g_o_cost) + (
             0.9 * (self.g_d_cost)
-        ) + self.g_p_cost  #+(scale*self.penalty)+(scale2*self.open_penalty) TODO
+        ) + self.g_p_cost + (scale_o*self.penalty) + (scale_d*self.open_penalty)
 
         # tensorboard
+        # Penalty
+        tf.summary.scalar('open_penalty', self.open_penalty, collections=['G'], family='Penalty')
+        tf.summary.scalar('dribble_penalty', self.penalty, collections=['G'], family='Penalty')
+        tf.summary.scalar('open_penalty_scaled', scale_d*self.open_penalty, collections=['G'], family='Penalty')
+        tf.summary.scalar('dribble_penalty_scaled', scale_o*self.penalty, collections=['G'], family='Penalty')
         # G
         tf.summary.scalar('loss_G_Off', self.g_o_cost, collections=['G'], family='LOSS')
         tf.summary.scalar('loss_G_Def', self.g_d_cost, collections=['G'], family='LOSS')
@@ -261,10 +266,10 @@ class WGAN_Model():
         tf.summary.scalar('loss_D_ALL', d_cost, collections=['D'], family='LOSS')
         # Grad Penalty
         grad_pen_mean = (self.o_grad_pen + self.d_grad_pen + self.p_grad_pen) / 3.0
-        tf.summary.scalar('loss_D_Off', self.o_grad_pen, collections=['D'], family='Grad_Penalty')
-        tf.summary.scalar('loss_D_Def', self.d_grad_pen, collections=['D'], family='Grad_Penalty')
-        tf.summary.scalar('loss_D_Play', self.p_grad_pen, collections=['D'], family='Grad_Penalty')
-        tf.summary.scalar('loss_D_ALL', grad_pen_mean, collections=['D'], family='Grad_Penalty')
+        tf.summary.scalar('grad_penalty_Off', self.o_grad_pen, collections=['D'], family='Penalty')
+        tf.summary.scalar('grad_penalty_Def', self.d_grad_pen, collections=['D'], family='Penalty')
+        tf.summary.scalar('grad_penalty_Play', self.p_grad_pen, collections=['D'], family='Penalty')
+        tf.summary.scalar('grad_penalty_ALL', grad_pen_mean, collections=['D'], family='Penalty')
         # em
         em_mean = (self.o_em_dist + self.d_em_dist + self.p_em_dist) / 3.0
         tf.summary.scalar('EM_Dist_Off', self.o_em_dist, collections=['D'], family='EM')
