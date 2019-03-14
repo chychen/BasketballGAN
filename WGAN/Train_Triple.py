@@ -191,16 +191,16 @@ def train(training_data,valid_data,data_factory,config):
                                             z = z_samples())
 
 
-            # grad += grad_/num_batch
-            # d_cost += d_/num_batch
-            # g_cost += o_gen/num_batch
-            # em_ += em/num_batch
+            grad += grad_/num_batch
+            d_cost += d_/num_batch
+            g_cost += o_gen/num_batch
+            em_ += em/num_batch
 
 
-            # def_grad += grad2 / num_batch
-            # def_d += d2_/num_batch
-            # def_gen += def_gen/num_batch
-            # def_em += em2/num_batch
+            def_grad += grad2 / num_batch
+            def_d += d2_/num_batch
+            def_gen += def_gen/num_batch
+            def_em += em2/num_batch
 
             p_grad += grad3/num_batch
             p_d += d3_/num_batch

@@ -226,8 +226,7 @@ class WGAN_Model():
         #self.penalty = self.dribbler_penalty(self.fake_play,real_play)
         #self.open_penalty = self._open_shot_penalty(real_play,self.fake_play)
 
-        # self.gen_cost = (0.9*self.g_cost)+(0.9*(self.g2_cost))+self.g3_cost #+(scale*self.penalty)+(scale2*self.open_penalty)
-        self.gen_cost = self.g3_cost
+        self.gen_cost = (0.9*self.g_cost)+(0.9*(self.g2_cost))+self.g3_cost #+(scale*self.penalty)+(scale2*self.open_penalty)
 
 
         self.t_vars = tf.trainable_variables()
@@ -371,35 +370,30 @@ class WGAN_Model():
                       self.z_sample: z,self.ground_feature:feat2_
                       }
 
-        # d_cost, real_score, grad, em,d_opt = self.sess.run((self.d_cost,
-        #                                                       self.realDisc, self.grad_pen, self.em_dist,
-        #                                                         self.o_optimizer),
-        #                                                       feed_dict=train_feed)
+        d_cost, real_score, grad, em,d_opt = self.sess.run((self.d_cost,
+                                                              self.realDisc, self.grad_pen, self.em_dist,
+                                                                self.o_optimizer),
+                                                              feed_dict=train_feed)
 
-        # d2_cost, real2_score, grad2, em2, d2_opt = self.sess.run((self.d2_cost, self.realDisc2, self.grad2_pen,
-        #                                                           self.em2_dist,self.d_optimizer),
-        #                                                           feed_dict=train_feed)
+        d2_cost, real2_score, grad2, em2, d2_opt = self.sess.run((self.d2_cost, self.realDisc2, self.grad2_pen,
+                                                                  self.em2_dist,self.d_optimizer),
+                                                                  feed_dict=train_feed)
 
         d3_cost, real3_score, grad3, em3, d3_opt = self.sess.run((self.d3_cost, self.realDisc3, self.grad3_pen,
                                                                   self.em3_dist,self.p_optimizer),
                                                                   feed_dict=train_feed)
 
-        # return d_cost,grad,em,\
-        #        d2_cost, grad2, em2,\
-        #        d3_cost,grad3,em3
-        return 0,0,0,\
-               0, 0, 0,\
+        return d_cost,grad,em,\
+               d2_cost, grad2, em2,\
                d3_cost,grad3,em3
 
     def update_gen(self,real,real_d, x, x2,x3, z):
         train_feed = {self.input_:real,self.input_d:real_d,self.seq_input: x, self.seq_feature: x2,self.ground_feature:x3, self.z_sample: z}
 
-        # g_opt,g_cost,def_cost,p_cost,gen_cost,pen,open_pen = self.sess.run((self.genO_optimizer,self.g_cost,self.g2_cost,self.g3_cost,self.gen_cost,self.penalty,self.open_penalty                                                    ),
-        #                                             feed_dict=train_feed)
-        # return g_cost,def_cost,p_cost, gen_cost,pen,open_pen
-        g_opt,gen_cost = self.sess.run((self.genO_optimizer,self.gen_cost),feed_dict=train_feed)
+        g_opt,g_cost,def_cost,p_cost,gen_cost,pen,open_pen = self.sess.run((self.genO_optimizer,self.g_cost,self.g2_cost,self.g3_cost,self.gen_cost,self.penalty,self.open_penalty                                                    ),
+                                                    feed_dict=train_feed)
 
-        return g_cost,0,0, gen_cost,0,0
+        return g_cost,def_cost,p_cost, gen_cost,pen,open_pen
 
     def valid_loss(self, x, x2, y, feat_,feat2_, z):
         train_feed = {self.input_: x, self.input_d: x2,
