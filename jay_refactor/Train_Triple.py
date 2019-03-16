@@ -12,9 +12,9 @@ import game_visualizer
 import matplotlib.pyplot as plt
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('folder_path', './v1/', 'summeray directory')
+tf.app.flags.DEFINE_string('folder_path', '/workspace/data/nctu_cgvlab_bballgan/Log/new_folder/', 'summeray directory')
 tf.app.flags.DEFINE_string('check_point', None, 'summary directory')
-tf.app.flags.DEFINE_string('data_path', '../Data/', 'summary directory')
+tf.app.flags.DEFINE_string('data_path', '/workspace/data/nctu_cgvlab_bballgan/Reordered_Data/', 'summary directory')
 tf.app.flags.DEFINE_integer('batch_size', 128, 'batch size of input')
 tf.app.flags.DEFINE_integer('latent_dims', 150, 'dimension of latent variable')
 tf.app.flags.DEFINE_integer('seq_length', 50, 'sequence length')
@@ -29,7 +29,7 @@ tf.app.flags.DEFINE_float('lambda_', 1.0, 'Decaying lambda value')
 tf.app.flags.DEFINE_integer('n_filters', 256, 'number of filters in conv')
 tf.app.flags.DEFINE_float('keep_prob', 1.0, 'keep prob of dropout')
 
-tf.app.flags.DEFINE_integer('checkpoint_step', 25,
+tf.app.flags.DEFINE_integer('checkpoint_step', 100,
                             'number of steps before saving checkpoint')
 
 CHECKPOINT_PATH = os.path.join(FLAGS.folder_path, 'Checkpoints/')

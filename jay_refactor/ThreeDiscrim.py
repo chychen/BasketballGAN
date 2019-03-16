@@ -56,7 +56,7 @@ class WGAN_Model():
         init_ = tf.global_variables_initializer()
         self.sess = tf.Session()
         self.sess.run(init_)
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=0)
 
         # summary collection
         self.G_summaries = tf.summary.merge(tf.get_collection('G'))
@@ -131,7 +131,10 @@ class WGAN_Model():
                     activation=None,
                     kernel_initializer=layers.xavier_initializer(),
                     bias_initializer=tf.zeros_initializer())
-            return conv_result
+#             return conv_result
+                seq = conv_result[:, :, :22]
+                feat = tf.math.sigmoid(conv_result[:, :, 22:])
+            return tf.concat([seq, feat], axis=-1)
 
 
 ###########################################################
@@ -243,12 +246,11 @@ class WGAN_Model():
         self.g_o_cost = -tf.reduce_mean(fake_o)
         self.g_d_cost = -tf.reduce_mean(fake_d)
         self.g_p_cost = -tf.reduce_mean(fake_p)
-        scale_o = tf.abs(self.g_o_cost)
-        scale_d = tf.abs(self.g_d_cost)
         self.penalty = self.dribbler_penalty(fake_play, real_play)
         self.open_penalty = self._open_shot_penalty(real_play, fake_play)
-        #         self.gen_cost = 0.9 * self.g_o_cost + 0.9 * self.g_d_cost + self.g_p_cost + scale_o * self.penalty + scale_d * self.open_penalty
-        self.gen_cost = self.g_o_cost + self.g_d_cost + self.g_p_cost + scale_o * self.penalty + scale_d * self.open_penalty
+        self.pass_penalty = self._pass_ball_penalty(fake_play)
+        g_mean_cost = (self.g_o_cost+self.g_d_cost+self.g_p_cost)/3.0
+        self.gen_cost = g_mean_cost + tf.abs(g_mean_cost) * self.penalty + tf.abs(g_mean_cost) * self.open_penalty + tf.abs(g_mean_cost) * self.pass_penalty
 
         # tensorboard
         # Penalty
@@ -263,13 +265,23 @@ class WGAN_Model():
             collections=['G'],
             family='Penalty')
         tf.summary.scalar(
+            'pass_penalty',
+            self.pass_penalty,
+            collections=['G'],
+            family='Penalty')
+        tf.summary.scalar(
             'open_penalty_scaled',
-            scale_d * self.open_penalty,
+            tf.abs(g_mean_cost) * self.open_penalty,
             collections=['G'],
             family='Penalty')
         tf.summary.scalar(
             'dribble_penalty_scaled',
-            scale_o * self.penalty,
+            tf.abs(g_mean_cost) * self.penalty,
+            collections=['G'],
+            family='Penalty')
+        tf.summary.scalar(
+            'pass_penalty_scaled',
+            tf.abs(g_mean_cost) * self.pass_penalty,
             collections=['G'],
             family='Penalty')
         # G
@@ -279,6 +291,8 @@ class WGAN_Model():
             'loss_G_Def', self.g_d_cost, collections=['G'], family='LOSS')
         tf.summary.scalar(
             'loss_G_Play', self.g_p_cost, collections=['G'], family='LOSS')
+        tf.summary.scalar(
+            'loss_G_mean', g_mean_cost, collections=['G'], family='LOSS')
         tf.summary.scalar(
             'loss_G_ALL', self.gen_cost, collections=['G'], family='LOSS')
         # D
@@ -374,6 +388,27 @@ class WGAN_Model():
 
         return loss, grad_pen
 
+    def _pass_ball_penalty(self, fake):
+        """
+        fake: shape=[?, 50, 28]
+        """
+        ball_pos = fake[:, :, 0:2]
+        ball_status = self.seq_feature
+        ballpass_frames = tf.equal(tf.reduce_sum(ball_status, axis=-1), 0)[:, 1:-1]
+        vel_1 = ball_pos[:, 1:-1] - ball_pos[:, 0:-2]
+        vel_2 = ball_pos[:, 2:] - ball_pos[:, 1:-1]
+        dot_p = vel_1[:,:,0]*vel_2[:,:,0] + vel_1[:,:,1]*vel_2[:,:,1]
+        vel_1_norm = tf.math.sqrt(vel_1[:,:,0]**2+vel_1[:,:,1]**2+1e-10)
+        vel_2_norm = tf.math.sqrt(vel_2[:,:,0]**2+vel_2[:,:,1]**2+1e-10)
+        v = dot_p/(vel_1_norm*vel_2_norm)
+        clip = tf.clip_by_value(v, -1.0+1e-5, 1.0-1e-5)
+        theta = tf.math.acos(clip)
+        pass_theta = tf.cast(ballpass_frames, tf.float32)*theta
+        frames = tf.cast(tf.math.count_nonzero(ballpass_frames),tf.float32)
+        result = tf.div_no_nan(tf.reduce_sum(pass_theta), frames)
+        return result
+#         return tf.where(tf.equal(frames, 0.0), 0.0, result)
+    
     def dribbler_penalty(self, fake, real):
         fake_ = self._dribbler_score(fake, log_scope_name='fake_pen')
 
