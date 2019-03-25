@@ -6,10 +6,13 @@ import numpy as np
 import tensorflow as tf
 import os
 import shutil
+import time
 from utils import DataFactory
 from ThreeDiscrim import WGAN_Model
 import game_visualizer
 import matplotlib.pyplot as plt
+
+# os.environ['TF_ENABLE_AUTO_MIXED_PRECISION'] = '1' # for mixed precision enable double lr and batch_size
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('folder_path', '/workspace/data/nctu_cgvlab_bballgan/Log/new_folder/', 'summeray directory')
@@ -24,7 +27,6 @@ tf.app.flags.DEFINE_integer('n_resblock', 8, 'number of residual blocks')
 tf.app.flags.DEFINE_integer('pretrain_D', 25, 'Epoch to pretrain D')
 tf.app.flags.DEFINE_integer('train_D', 5, 'Number of times to train D')
 tf.app.flags.DEFINE_float('lr_', 1e-4, 'learning rate')
-tf.app.flags.DEFINE_float('dlr_', 1e-4, 'discriminator learning rate')
 tf.app.flags.DEFINE_float('lambda_', 1.0, 'Decaying lambda value')
 tf.app.flags.DEFINE_integer('n_filters', 256, 'number of filters in conv')
 tf.app.flags.DEFINE_float('keep_prob', 1.0, 'keep prob of dropout')
@@ -49,7 +51,6 @@ class Training_config(object):
         self.features_d = FLAGS.features_d
         self.n_filters = FLAGS.n_filters
         self.lr_ = FLAGS.lr_
-        self.dlr_ = FLAGS.dlr_
         self.keep_prob = FLAGS.keep_prob
         self.n_resblock = FLAGS.n_resblock
 
@@ -92,11 +93,13 @@ class Trainer(object):
                 num_d = 10
             else:
                 num_d = FLAGS.train_D
-
+            start_time = time.time()
             for _ in range(num_d):
                 self.train_D()
-
-            self.train_G()
+#             print('D img/s:{}'.format(num_d*FLAGS.batch_size/(time.time()-start_time)))
+            start_time = time.time()
+            self.train_G()            
+#             print('G img/s:{}'.format(FLAGS.batch_size/(time.time()-start_time)))
             # validation
             valid_idx = self.batch_id_valid * FLAGS.batch_size
             valid_ = self.data_factory.valid_data['A'][valid_idx:valid_idx +

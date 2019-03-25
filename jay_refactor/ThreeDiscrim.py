@@ -17,7 +17,6 @@ class WGAN_Model():
     def __init__(self, config):
         self.global_step = tf.train.get_or_create_global_step()
         self.lr_ = config.lr_
-        self.dlr_ = config.dlr_
         self.batch_size = config.batch_size
         self.seq_length = config.seq_length
         self.latent_dims = config.latent_dims
@@ -401,13 +400,12 @@ class WGAN_Model():
         vel_1_norm = tf.math.sqrt(vel_1[:,:,0]**2+vel_1[:,:,1]**2+1e-10)
         vel_2_norm = tf.math.sqrt(vel_2[:,:,0]**2+vel_2[:,:,1]**2+1e-10)
         v = dot_p/(vel_1_norm*vel_2_norm)
-        clip = tf.clip_by_value(v, -1.0+1e-5, 1.0-1e-5)
+        clip = tf.clip_by_value(v, -1.0, 1.0)
         theta = tf.math.acos(clip)
         pass_theta = tf.cast(ballpass_frames, tf.float32)*theta
         frames = tf.cast(tf.math.count_nonzero(ballpass_frames),tf.float32)
         result = tf.div_no_nan(tf.reduce_sum(pass_theta), frames)
         return result
-#         return tf.where(tf.equal(frames, 0.0), 0.0, result)
     
     def dribbler_penalty(self, fake, real):
         fake_ = self._dribbler_score(fake, log_scope_name='fake_pen')
