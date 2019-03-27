@@ -12,12 +12,17 @@ from ThreeDiscrim import WGAN_Model
 import game_visualizer
 import matplotlib.pyplot as plt
 
-# os.environ['TF_ENABLE_AUTO_MIXED_PRECISION'] = '1' # for mixed precision enable double lr and batch_size
+os.environ[
+    'TF_ENABLE_AUTO_MIXED_PRECISION'] = '0'  # for mixed precision enable double lr and batch_size on nvidia tensorflow:19.03-py3
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('folder_path', '/workspace/data/nctu_cgvlab_bballgan/Log/new_folder/', 'summeray directory')
+tf.app.flags.DEFINE_string(
+    'folder_path', '/workspace/data/nctu_cgvlab_bballgan/Log/new_folder/',
+    'summeray directory')
 tf.app.flags.DEFINE_string('check_point', None, 'summary directory')
-tf.app.flags.DEFINE_string('data_path', '/workspace/data/nctu_cgvlab_bballgan/Reordered_Data/', 'summary directory')
+tf.app.flags.DEFINE_string(
+    'data_path', '/workspace/data/nctu_cgvlab_bballgan/Reordered_Data/',
+    'summary directory')
 tf.app.flags.DEFINE_integer('batch_size', 128, 'batch size of input')
 tf.app.flags.DEFINE_integer('latent_dims', 150, 'dimension of latent variable')
 tf.app.flags.DEFINE_integer('seq_length', 50, 'sequence length')
@@ -96,10 +101,12 @@ class Trainer(object):
             start_time = time.time()
             for _ in range(num_d):
                 self.train_D()
+
+
 #             print('D img/s:{}'.format(num_d*FLAGS.batch_size/(time.time()-start_time)))
             start_time = time.time()
-            self.train_G()            
-#             print('G img/s:{}'.format(FLAGS.batch_size/(time.time()-start_time)))
+            self.train_G()
+            #             print('G img/s:{}'.format(FLAGS.batch_size/(time.time()-start_time)))
             # validation
             valid_idx = self.batch_id_valid * FLAGS.batch_size
             valid_ = self.data_factory.valid_data['A'][valid_idx:valid_idx +

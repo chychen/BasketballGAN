@@ -75,7 +75,7 @@ class WGAN_Model():
 
 ###########################################################
 
-    def G_(self, cond, x, reuse=False, scope=''):
+    def G_(self, cond, x, reuse=False, scope='G_'):
         if reuse:
             tf.get_variable_scope().reuse_variables()
         with tf.variable_scope(scope, reuse=reuse):
@@ -112,25 +112,14 @@ class WGAN_Model():
                     next_input,
                     n_filters=self.n_filters,
                     n_layers=2,
-                    residual_alpha=1.0,
-                    pad='valid')
+                    residual_alpha=1.0)
                 next_input = res_b
 
             with tf.variable_scope('conv_result') as scope:
-                normed = layers.layer_norm(next_input)
-                nonlinear = ops.leaky_relu(normed)
+                nonlinear = tf.nn.leaky_relu(next_input)
                 padded = tf.concat(
                     [nonlinear[:, 0:2], nonlinear, nonlinear[:, -2:]], axis=1)
-                conv_result = tf.layers.conv1d(
-                    inputs=padded,
-                    filters=28,
-                    kernel_size=5,
-                    strides=1,
-                    padding='valid',
-                    activation=None,
-                    kernel_initializer=layers.xavier_initializer(),
-                    bias_initializer=tf.zeros_initializer())
-#             return conv_result
+                conv_result = ops.conv1d_sn(padded, 1, 'VALID', 28)
                 seq = conv_result[:, :, :22]
                 feat = tf.math.sigmoid(conv_result[:, :, 22:])
             return tf.concat([seq, feat], axis=-1)
@@ -145,18 +134,8 @@ class WGAN_Model():
 
         with tf.variable_scope(scope, reuse=reuse):
             with tf.variable_scope('conv_input') as scope:
-                conv_input = tf.layers.conv1d(
-                    inputs=concat_,
-                    filters=self.n_filters,
-                    kernel_size=5,
-                    strides=1,
-                    padding='same',
-                    activation=ops.leaky_relu,
-                    kernel_initializer=layers.xavier_initializer(),
-                    bias_initializer=tf.zeros_initializer())
-
+                conv_input = ops.conv1d_sn(concat_, 1, 'VALID', self.n_filters)
             next_input = conv_input
-
             for i in range(self.n_resblock):
                 res_b = ops.res_block(
                     'disc_Res' + str(i),
@@ -168,17 +147,8 @@ class WGAN_Model():
                 next_input = res_b
 
             with tf.variable_scope('conv_output') as scope:
-                normed = layers.layer_norm(next_input)
-                nonlinear = ops.leaky_relu(normed)
-                conv_output = tf.layers.conv1d(
-                    inputs=nonlinear,
-                    filters=1,
-                    kernel_size=5,
-                    strides=1,
-                    padding='same',
-                    activation=ops.leaky_relu,
-                    kernel_initializer=layers.xavier_initializer(),
-                    bias_initializer=tf.zeros_initializer())
+                nonlinear = tf.nn.leaky_relu(next_input)
+                conv_output = ops.conv1d_sn(nonlinear, 1, 'VALID', 1)
                 score = conv_output
                 conv_output = tf.reduce_mean(conv_output, axis=1)
 
@@ -248,8 +218,11 @@ class WGAN_Model():
         self.penalty = self.dribbler_penalty(fake_play, real_play)
         self.open_penalty = self._open_shot_penalty(real_play, fake_play)
         self.pass_penalty = self._pass_ball_penalty(fake_play)
-        g_mean_cost = (self.g_o_cost+self.g_d_cost+self.g_p_cost)/3.0
-        self.gen_cost = g_mean_cost + tf.abs(g_mean_cost) * self.penalty + tf.abs(g_mean_cost) * self.open_penalty + tf.abs(g_mean_cost) * self.pass_penalty
+        g_mean_cost = (self.g_o_cost + self.g_d_cost + self.g_p_cost) / 3.0
+
+        scale = tf.abs(g_mean_cost)
+        scale = tf.stop_gradient(scale)
+        self.gen_cost = g_mean_cost + scale * self.penalty + scale * self.open_penalty + scale * self.pass_penalty
 
         # tensorboard
         # Penalty
@@ -393,20 +366,24 @@ class WGAN_Model():
         """
         ball_pos = fake[:, :, 0:2]
         ball_status = self.seq_feature
-        ballpass_frames = tf.equal(tf.reduce_sum(ball_status, axis=-1), 0)[:, 1:-1]
+        ballpass_frames = tf.equal(tf.reduce_sum(ball_status, axis=-1),
+                                   0)[:, 1:-1]
         vel_1 = ball_pos[:, 1:-1] - ball_pos[:, 0:-2]
         vel_2 = ball_pos[:, 2:] - ball_pos[:, 1:-1]
-        dot_p = vel_1[:,:,0]*vel_2[:,:,0] + vel_1[:,:,1]*vel_2[:,:,1]
-        vel_1_norm = tf.math.sqrt(vel_1[:,:,0]**2+vel_1[:,:,1]**2+1e-10)
-        vel_2_norm = tf.math.sqrt(vel_2[:,:,0]**2+vel_2[:,:,1]**2+1e-10)
-        v = dot_p/(vel_1_norm*vel_2_norm)
-        clip = tf.clip_by_value(v, -1.0, 1.0)
+        dot_p = vel_1[:, :, 0] * vel_2[:, :, 0] + vel_1[:, :, 1] * vel_2[:, :,
+                                                                         1]
+        vel_1_norm = tf.math.sqrt(vel_1[:, :, 0]**2 + vel_1[:, :, 1]**2 +
+                                  1e-10)
+        vel_2_norm = tf.math.sqrt(vel_2[:, :, 0]**2 + vel_2[:, :, 1]**2 +
+                                  1e-10)
+        v = dot_p / (vel_1_norm * vel_2_norm)
+        clip = tf.clip_by_value(v, -1.0 + 1e-5, 1.0 - 1e-5)
         theta = tf.math.acos(clip)
-        pass_theta = tf.cast(ballpass_frames, tf.float32)*theta
-        frames = tf.cast(tf.math.count_nonzero(ballpass_frames),tf.float32)
+        pass_theta = tf.cast(ballpass_frames, tf.float32) * theta
+        frames = tf.cast(tf.math.count_nonzero(ballpass_frames), tf.float32)
         result = tf.div_no_nan(tf.reduce_sum(pass_theta), frames)
         return result
-    
+
     def dribbler_penalty(self, fake, real):
         fake_ = self._dribbler_score(fake, log_scope_name='fake_pen')
 
@@ -581,3 +558,4 @@ class WGAN_Model():
 
     def load_model(self, checkpoint_path):
         self.saver.restore(self.sess, checkpoint_path)
+        print('successfully restore model:', checkpoint_path)
