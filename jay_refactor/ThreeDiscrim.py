@@ -218,17 +218,23 @@ class WGAN_Model():
         self.penalty = self.dribbler_penalty(fake_play, real_play)
         self.open_penalty = self._open_shot_penalty(real_play, fake_play)
         self.pass_penalty = self._pass_ball_penalty(fake_play)
+        self.acc_penalty = self._acc_penalty(real_play, fake_play)
         g_mean_cost = (self.g_o_cost + self.g_d_cost + self.g_p_cost) / 3.0
-
+#         g_mean_cost = self.g_p_cost
         scale = tf.abs(g_mean_cost)
         scale = tf.stop_gradient(scale)
-        self.gen_cost = g_mean_cost + scale * self.penalty + scale * self.open_penalty + scale * self.pass_penalty
+        self.gen_cost = g_mean_cost + scale * self.penalty + scale * self.open_penalty + scale * self.pass_penalty + scale * self.acc_penalty
 
         # tensorboard
         # Penalty
         tf.summary.scalar(
             'open_penalty',
             self.open_penalty,
+            collections=['G'],
+            family='Penalty')
+        tf.summary.scalar(
+            'acc_penalty',
+            self.acc_penalty,
             collections=['G'],
             family='Penalty')
         tf.summary.scalar(
@@ -244,6 +250,11 @@ class WGAN_Model():
         tf.summary.scalar(
             'open_penalty_scaled',
             tf.abs(g_mean_cost) * self.open_penalty,
+            collections=['G'],
+            family='Penalty')
+        tf.summary.scalar(
+            'acc_penalty_scaled',
+            tf.abs(g_mean_cost) * self.acc_penalty,
             collections=['G'],
             family='Penalty')
         tf.summary.scalar(
@@ -410,8 +421,9 @@ class WGAN_Model():
                 inputs[:, :, :2],
                 shape=[self.batch_size, self.seq_length, 1, 2])
 
-            feat_ = tf.reshape(
-                inputs[:, :, 22:], shape=[self.batch_size, self.seq_length, 6])
+#             feat_ = tf.reshape(
+#                 inputs[:, :, 22:], shape=[self.batch_size, self.seq_length, 6])
+            feat_ = self.seq_feature
             # players x and y pos
             teamB_pos = tf.reshape(
                 inputs[:, :, 2:12],
@@ -426,6 +438,16 @@ class WGAN_Model():
             dribbler_sc = tf.reduce_mean(dribbler_scMin)
 
             return dribbler_sc
+        
+    def _acc_penalty(self, real, fake):
+        def get_acc_pen(data):
+            speed = data[:,1:,2:22]-data[:,:-1,2:22]
+            acc = speed[:,1:]-speed[:,:-1]
+            acc = tf.reshape(acc, shape=[self.batch_size, self.seq_length-2, 10, 2])
+            dist_ = tf.norm(acc, ord='euclidean', axis=-1)
+            return tf.reduce_mean(dist_)
+        return tf.abs(get_acc_pen(real)-get_acc_pen(fake))
+            
 
     def _open_shot_penalty(self, real, fake):
         real_o = tf.reshape(
@@ -477,16 +499,22 @@ class WGAN_Model():
                 b2teamB_dot_b2basket / (dist_teamB * dist_basket + 1e-3))
             open_shot_score_all = (theta + 1.0) * (dist_teamB + 1.0)
             open_shot_score_min = tf.reduce_min(open_shot_score_all, axis=-1)
-            open_shot_score = tf.reduce_mean(open_shot_score_min)
+            ##############################################################################
+            ball_status = self.seq_feature
+            dribble_frames = tf.equal(tf.reduce_sum(ball_status[:,:,:5], axis=-1), 1)
+            frames = tf.cast(tf.math.count_nonzero(dribble_frames), tf.float32)
+            result = tf.div_no_nan(tf.reduce_sum(tf.multiply(open_shot_score_min, tf.cast(dribble_frames, tf.float32))), frames)
+            return result
+        
+#             open_shot_score = tf.reduce_mean(open_shot_score_min)
+#             too_close_penalty = 0.0
+#             for i in range(5):
+#                 vec = tf.subtract((teamB_pos[:, :, i:i + 1]), teamB_pos)
+#                 dist = tf.sqrt((vec[:, :, :, 0] + 1e-8)**2 +
+#                                (vec[:, :, :, 1] + 1e-8)**2)
+#                 too_close_penalty -= tf.reduce_mean(dist)
 
-            too_close_penalty = 0.0
-            for i in range(5):
-                vec = tf.subtract((teamB_pos[:, :, i:i + 1]), teamB_pos)
-                dist = tf.sqrt((vec[:, :, :, 0] + 1e-8)**2 +
-                               (vec[:, :, :, 1] + 1e-8)**2)
-                too_close_penalty -= tf.reduce_mean(dist)
-
-            return open_shot_score + too_close_penalty
+#             return open_shot_score + too_close_penalty
 
     def update_discrim(self, x, x2, y, feat_, feat2_, z):
         train_feed = {
@@ -498,11 +526,14 @@ class WGAN_Model():
             self.ground_feature: feat2_
         }
 
+#         _, D_summary, g_step = self.sess.run([
+#             self.p_optimizer,
+#             self.D_summaries, self.global_step
+#         ], feed_dict=train_feed)
         _, _, _, D_summary, g_step = self.sess.run([
             self.o_optimizer, self.d_optimizer, self.p_optimizer,
             self.D_summaries, self.global_step
-        ],
-                                                   feed_dict=train_feed)
+        ], feed_dict=train_feed)
         self.D_summary_writer.add_summary(D_summary, global_step=g_step)
 
     def update_gen(self, real, real_d, x, x2, x3, z):

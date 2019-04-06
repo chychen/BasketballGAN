@@ -18,10 +18,10 @@ os.environ[
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     'folder_path', None,
-    '/workspace/data/nctu_cgvlab_bballgan/Log/v13_stop_grad/results')
+    '/workspace/data/nctu_cgvlab_bballgan/Log/.../results')
 tf.app.flags.DEFINE_string(
     'check_point', None,
-    '/workspace/data/nctu_cgvlab_bballgan/Log/v13_stop_grad/Checkpoints/model.ckpt-166600'
+    '/workspace/data/nctu_cgvlab_bballgan/Log/.../Checkpoints/model.ckpt-176400'
 )
 tf.app.flags.DEFINE_string(
     'data_path', '/workspace/data/nctu_cgvlab_bballgan/Reordered_Data/',
@@ -31,7 +31,7 @@ tf.app.flags.DEFINE_integer('latent_dims', 150, 'dimension of latent variable')
 tf.app.flags.DEFINE_integer('seq_length', 50, 'sequence length')
 tf.app.flags.DEFINE_integer('features_', 12, 'number of offence features')
 tf.app.flags.DEFINE_integer('features_d', 10, 'number of defence features')
-tf.app.flags.DEFINE_integer('n_resblock', 8, 'number of residual blocks')
+tf.app.flags.DEFINE_integer('n_resblock', 4, 'number of residual blocks')
 tf.app.flags.DEFINE_integer('pretrain_D', 25, 'Epoch to pretrain D')
 tf.app.flags.DEFINE_integer('train_D', 5, 'Number of times to train D')
 tf.app.flags.DEFINE_float('lr_', 1e-4, 'learning rate')
@@ -97,7 +97,27 @@ class Collecter(object):
         np.save(
             os.path.join(self.config.folder_path, 'feat_valid.npy'),
             self.data_factory.f_valid)
-        return result
+
+    def infer_diff_lengths(self):
+        seq_data = np.load(os.path.join(FLAGS.data_path, 'Test2/TestSeq2.npy'))
+        max_len = seq_data.shape[1]
+        feat_data = np.load(os.path.join(FLAGS.data_path, 'Test2/TestSeqCond2.npy'))
+        len_data = np.load(os.path.join(FLAGS.data_path, 'Test2/TestLength2.npy'))
+        seq_data = self.data_factory.normalize(seq_data)
+        num_data = seq_data.shape[0]
+        results = []
+        for i in range(num_data):
+            print(i)
+            res = self.model.reconstruct_(seq_data[i:i+1, :len_data[i]],
+                                             z_samples(1),
+                                             feat_data[i:i+1, :len_data[i]])
+            res = np.concatenate([res, np.zeros(shape=[1,max_len-len_data[i],res.shape[2]])], axis=1)
+            results.append(res)
+        results = np.concatenate(results, axis=0)
+        results = self.data_factory.recover_data(results[:, :, :22])
+        np.save(
+            os.path.join(self.config.folder_path, 'reconstruct.npy'), results)
+        print(results.shape)
 
 
 def main(_):
@@ -122,8 +142,8 @@ def main(_):
         config = Training_config()
         config.show()
         collector = Collecter(data_factory, config)
-        result = collector.collect()
-        print(result.shape)
+#         collector.collect()
+        collector.infer_diff_lengths()
 
 
 if __name__ == '__main__':

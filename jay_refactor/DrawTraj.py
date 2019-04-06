@@ -4,16 +4,15 @@ import os
 import math
 
 #data path
-# root = '/workspace/data/nctu_cgvlab_bballgan/Log/v13_stop_grad/'
-# root = '/workspace/data/nctu_cgvlab_bballgan/Log/v12_SN_WGAN_GP/'
+save_path = '/workspace/data/nctu_cgvlab_bballgan/Log/Compare_Traj/'
 reconstruct = []
 reconstruct.append(
     np.load(
-        '/workspace/data/nctu_cgvlab_bballgan/Log/v13_stop_grad/results/reconstruct.npy'
+        '/workspace/data/nctu_cgvlab_bballgan/Log/1G3D3P/results/reconstruct.npy'
     ))
 reconstruct.append(
     np.load(
-        '/workspace/data/nctu_cgvlab_bballgan/Log/v12_SN_WGAN_GP/results/reconstruct.npy'
+        '/workspace/data/nctu_cgvlab_bballgan/Log/1G3D-no-feat/results/reconstruct.npy'
     ))
 num_data = reconstruct[0].shape[0]
 titles = ['With Penalty', 'Without Penalty']
@@ -35,7 +34,6 @@ for index in range(num_data):
             ]
 
             #save image file path
-            save_path = '/workspace/data/nctu_cgvlab_bballgan/Log/Compare_Traj/'
             file_name = str(index)
             if not os.path.isdir(save_path):
                 os.makedirs(save_path)

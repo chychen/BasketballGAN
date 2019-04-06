@@ -21,6 +21,7 @@ tf.app.flags.DEFINE_string(
     'summeray directory')
 tf.app.flags.DEFINE_string('check_point', None, 'summary directory')
 tf.app.flags.DEFINE_string(
+#     'data_path', '/workspace/data/nctu_cgvlab_bballgan/Messy_Data/',
     'data_path', '/workspace/data/nctu_cgvlab_bballgan/Reordered_Data/',
     'summary directory')
 tf.app.flags.DEFINE_integer('batch_size', 128, 'batch size of input')

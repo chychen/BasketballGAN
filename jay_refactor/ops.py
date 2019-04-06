@@ -31,6 +31,7 @@ def spectral_norm(w, iteration=1):
         w_norm = w / sigma
         w_norm = tf.reshape(w_norm, w_shape)
     return w_norm
+#     return w
 
 
 def conv1d_sn(value, stride, padding, n_filters, kernels=5):
@@ -59,6 +60,7 @@ def res_block(name,
         next_input = inputs
         for i in range(n_layers):
             with tf.variable_scope('conv' + str(i)) as scope:
+#                 next_input = layers.layer_norm(next_input)
                 nonlinear = tf.nn.leaky_relu(
                     next_input, alpha=leaky_relu_alpha)
                 padded = tf.concat(
