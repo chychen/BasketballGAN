@@ -92,18 +92,18 @@ def plot_data(ax,data, length, fps=6, dpi=300):
 #DATA_PATH = './Data/Real/'
 #data = np.load('PaddedPoint.npy')
 
-DATA_PATH = '/workspace/data/nctu_cgvlab_bballgan/Log/acc_pen/'
-data = np.load(DATA_PATH+'diff_len_results/reconstruct.npy')
+DATA_PATH = '/workspace/data/nctu_cgvlab_bballgan/Log/1G3D4P/diff_len_results_98k/'
+data = np.load(DATA_PATH+'reconstruct.npy')
 len_ = np.load('/workspace/data/nctu_cgvlab_bballgan/Reordered_Data/Test2/TestLength2.npy')
 # data = np.load('/workspace/data/nctu_cgvlab_bballgan/Log/CVAE/reconstruct.npy')
-len_ = np.ones(shape=data.shape[0], dtype=np.int32)*50
-
+# data = np.load('/workspace/data/nctu_cgvlab_bballgan/Messy_Data/50Real.npy')[:,:,:,:2].reshape([-1,50,22])
+# len_ = np.ones(shape=data.shape[0], dtype=np.int32)*50
 print(data.shape)
 
 #n = 512
 
-save_path = DATA_PATH+'diff_len_results/Videos'
-# save_path = '/workspace/data/nctu_cgvlab_bballgan/Log/CVAE/Videos'
+save_path = DATA_PATH+'Videos'
+# save_path = '/workspace/data/nctu_cgvlab_bballgan/Videos'
 if os.path.exists(save_path):
     shutil.rmtree(save_path)
     print('rm -rf "%s" complete!' % save_path)

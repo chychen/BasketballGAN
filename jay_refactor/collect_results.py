@@ -31,7 +31,7 @@ tf.app.flags.DEFINE_integer('latent_dims', 150, 'dimension of latent variable')
 tf.app.flags.DEFINE_integer('seq_length', 50, 'sequence length')
 tf.app.flags.DEFINE_integer('features_', 12, 'number of offence features')
 tf.app.flags.DEFINE_integer('features_d', 10, 'number of defence features')
-tf.app.flags.DEFINE_integer('n_resblock', 4, 'number of residual blocks')
+tf.app.flags.DEFINE_integer('n_resblock', 8, 'number of residual blocks')
 tf.app.flags.DEFINE_integer('pretrain_D', 25, 'Epoch to pretrain D')
 tf.app.flags.DEFINE_integer('train_D', 5, 'Number of times to train D')
 tf.app.flags.DEFINE_float('lr_', 1e-4, 'learning rate')
@@ -89,11 +89,12 @@ class Collecter(object):
                                          z_samples(num_valid_data),
                                          self.data_factory.f_valid)
         result = self.data_factory.recover_data(result[:, :, :22])
+        seq_valid = self.data_factory.recover_BALL_and_A(self.data_factory.seq_valid)
         np.save(
             os.path.join(self.config.folder_path, 'reconstruct.npy'), result)
         np.save(
             os.path.join(self.config.folder_path, 'seq_valid.npy'),
-            self.data_factory.seq_valid)
+            seq_valid)
         np.save(
             os.path.join(self.config.folder_path, 'feat_valid.npy'),
             self.data_factory.f_valid)
@@ -142,8 +143,8 @@ def main(_):
         config = Training_config()
         config.show()
         collector = Collecter(data_factory, config)
-#         collector.collect()
-        collector.infer_diff_lengths()
+        collector.collect()
+#         collector.infer_diff_lengths()
 
 
 if __name__ == '__main__':

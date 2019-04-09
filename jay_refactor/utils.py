@@ -97,12 +97,12 @@ class DataFactory(object):
 
     def recover_seq(self, norm_data):
         # X
-        norm_data[ :, [0, 2, 4, 6, 8, 10]] = norm_data[:, [0, 2, 4, 6, 8, 10]] * \
+        norm_data[:, :, [0, 2, 4, 6, 8, 10]] = norm_data[:,:, [0, 2, 4, 6, 8, 10]] * \
             self.__norm_dict['x']['stddev'] + self.__norm_dict['x']['mean']
         #norm_data[:, [0, 2, 4, 6, 8]] = norm_data[:, [0, 2, 4, 6, 8]] * \
         #                                    self.__norm_dict['x']['stddev'] + self.__norm_dict['x']['mean']
         # Y
-        norm_data[:, [1, 3, 5, 7, 9, 11]] = norm_data[ :, [1, 3, 5, 7, 9,11]] * \
+        norm_data[:,:, [1, 3, 5, 7, 9, 11]] = norm_data[:, :, [1, 3, 5, 7, 9,11]] * \
             self.__norm_dict['y']['stddev'] + self.__norm_dict['y']['mean']
         # Z
 
