@@ -8,11 +8,6 @@ from utils import DataFactory
 import ops
 import os
 
-# https://github.com/hardmaru/diff-vae-tensorflow/blob/master/model.py
-# https://medium.com/@anthony_sarkis/tensorboard-quick-start-in-5-minutes-e3ec69f673af
-# https://www.cs.cmu.edu/~bhiksha/courses/deeplearning/Fall.2015/slides/lec13.GAN.pdf
-
-
 class WGAN_Model():
     def __init__(self, config):
         self.global_step = tf.train.get_or_create_global_step()
@@ -72,8 +67,6 @@ class WGAN_Model():
     def network_(self):
         self.fake_play = self.G_(
             self.seq_input, self.z_sample, scope='G_', reuse=False)
-
-###########################################################
 
     def G_(self, cond, x, reuse=False, scope='G_'):
         if reuse:

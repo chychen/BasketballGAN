@@ -17,12 +17,11 @@ os.environ[
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
-    'folder_path', '/workspace/data/nctu_cgvlab_bballgan/Log/new_folder/',
+    'folder_path', None,
     'summeray directory')
 tf.app.flags.DEFINE_string('check_point', None, 'summary directory')
 tf.app.flags.DEFINE_string(
-#     'data_path', '/workspace/data/nctu_cgvlab_bballgan/Messy_Data/',
-    'data_path', '/workspace/data/nctu_cgvlab_bballgan/Reordered_Data/',
+    'data_path', None,
     'summary directory')
 tf.app.flags.DEFINE_integer('batch_size', 128, 'batch size of input')
 tf.app.flags.DEFINE_integer('latent_dims', 150, 'dimension of latent variable')
@@ -103,8 +102,6 @@ class Trainer(object):
             for _ in range(num_d):
                 self.train_D()
 
-
-#             print('D img/s:{}'.format(num_d*FLAGS.batch_size/(time.time()-start_time)))
             start_time = time.time()
             self.train_G()
             #             print('G img/s:{}'.format(FLAGS.batch_size/(time.time()-start_time)))
