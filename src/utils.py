@@ -190,16 +190,16 @@ class DataFactory(object):
             if axis_ == 'z':  # z
                 mean_ = np.mean(self.__real_data[:, :, 0, i])
                 stddev_ = np.std(self.__real_data[:, :, 0, i])
-                self.__real_data[:, :, 0, i] = (
-                    self.__real_data[:, :, 0, i] - mean_) / stddev_
+                self.__real_data[:, :, 0, i] = (self.__real_data[:, :, 0, i] -
+                                                mean_) / stddev_
                 norm_dict[axis_] = {}
                 norm_dict[axis_]['mean'] = mean_
                 norm_dict[axis_]['stddev'] = stddev_
             else:  # x and y
                 mean_ = np.mean(self.__real_data[:, :, :, i])
                 stddev_ = np.std(self.__real_data[:, :, :, i])
-                self.__real_data[:, :, :, i] = (
-                    self.__real_data[:, :, :, i] - mean_) / stddev_
+                self.__real_data[:, :, :, i] = (self.__real_data[:, :, :, i] -
+                                                mean_) / stddev_
 
                 self.BASKET_LEFT[i] = (self.BASKET_LEFT[i] - mean_) / stddev_
                 self.BASKET_RIGHT[i] = (self.BASKET_RIGHT[i] - mean_) / stddev_

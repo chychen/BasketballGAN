@@ -16,13 +16,8 @@ os.environ[
     'TF_ENABLE_AUTO_MIXED_PRECISION'] = '0'  # for mixed precision enable double lr and batch_size on nvidia tensorflow:19.03-py3
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string(
-    'folder_path', None,
-    'summeray directory')
-tf.app.flags.DEFINE_string('check_point', None, 'summary directory')
-tf.app.flags.DEFINE_string(
-    'data_path', None,
-    'summary directory')
+tf.app.flags.DEFINE_string('folder_path', None, 'summeray directory')
+tf.app.flags.DEFINE_string('data_path', None, 'summary directory')
 tf.app.flags.DEFINE_integer('batch_size', 128, 'batch size of input')
 tf.app.flags.DEFINE_integer('latent_dims', 150, 'dimension of latent variable')
 tf.app.flags.DEFINE_integer('seq_length', 50, 'sequence length')
@@ -35,6 +30,7 @@ tf.app.flags.DEFINE_float('lr_', 1e-4, 'learning rate')
 tf.app.flags.DEFINE_float('lambda_', 1.0, 'Decaying lambda value')
 tf.app.flags.DEFINE_integer('n_filters', 256, 'number of filters in conv')
 tf.app.flags.DEFINE_float('keep_prob', 1.0, 'keep prob of dropout')
+tf.app.flags.DEFINE_integer('vis_freq', 5, 'number of epoches to visulize samples')
 
 tf.app.flags.DEFINE_integer('checkpoint_step', 100,
                             'number of steps before saving checkpoint')
@@ -47,7 +43,6 @@ class Training_config(object):
     #Training configurations
     def __init__(self):
         self.folder_path = FLAGS.folder_path
-        self.checkpoint_path = FLAGS.check_point
         self.data_path = FLAGS.data_path
         self.batch_size = FLAGS.batch_size
         self.latent_dims = FLAGS.latent_dims
@@ -104,7 +99,6 @@ class Trainer(object):
 
             start_time = time.time()
             self.train_G()
-            #             print('G img/s:{}'.format(FLAGS.batch_size/(time.time()-start_time)))
             # validation
             valid_idx = self.batch_id_valid * FLAGS.batch_size
             valid_ = self.data_factory.valid_data['A'][valid_idx:valid_idx +
@@ -120,13 +114,12 @@ class Trainer(object):
             rfv_feat = self.data_factory.rf_valid[valid_idx:valid_idx +
                                                   FLAGS.batch_size]
 
-            self.model.valid_loss(
-                x=valid_,
-                x2=valid_D,
-                y=seq_v,
-                z=z_samples(),
-                feat_=rv_feat,
-                feat2_=rfv_feat)
+            self.model.valid_loss(x=valid_,
+                                  x2=valid_D,
+                                  y=seq_v,
+                                  z=z_samples(),
+                                  feat_=rv_feat,
+                                  feat2_=rfv_feat)
             self.update_batch_id_valid_and_shuffle()
 
     def train_G(self):
@@ -145,13 +138,12 @@ class Trainer(object):
 
         real_feat = rf_train[data_idx:data_idx + FLAGS.batch_size]
 
-        self.model.update_gen(
-            real=real_,
-            real_d=real_D,
-            x=seq_,
-            x2=seq_feat,
-            x3=real_feat,
-            z=z_samples())
+        self.model.update_gen(real=real_,
+                              real_d=real_D,
+                              x=seq_,
+                              x2=seq_feat,
+                              x3=real_feat,
+                              z=z_samples())
 
         self.update_batch_id_and_shuffle()
 
@@ -171,13 +163,12 @@ class Trainer(object):
 
         real_feat = rf_train[data_idx:data_idx + FLAGS.batch_size]
 
-        self.model.update_discrim(
-            x=real_,
-            x2=real_D,
-            y=seq_,
-            z=z_samples(),
-            feat_=seq_feat,
-            feat2_=real_feat)
+        self.model.update_discrim(x=real_,
+                                  x2=real_D,
+                                  y=seq_,
+                                  z=z_samples(),
+                                  feat_=seq_feat,
+                                  feat2_=real_feat)
 
         self.update_batch_id_and_shuffle()
 
@@ -199,7 +190,7 @@ class Trainer(object):
                 self.model.save_model(checkpoint_)
                 print("Saved model:", checkpoint_)
             # save generated sample
-            if self.epoch_id % 10 == 0:
+            if self.epoch_id % FLAGS.vis_freq == 0:
                 print('epoch_id:', self.epoch_id)
                 data_idx = self.batch_id * FLAGS.batch_size
                 f_train = self.data_factory.f_train
@@ -214,8 +205,8 @@ class Trainer(object):
                 game_visualizer.plot_data(
                     samples[0],
                     FLAGS.seq_length,
-                    file_path=SAMPLE_PATH + 'reconstruct{}.mp4'.format(
-                        self.epoch_id),
+                    file_path=SAMPLE_PATH +
+                    'reconstruct{}.mp4'.format(self.epoch_id),
                     if_save=True)
 
 
@@ -232,11 +223,10 @@ def main(_):
         print("Real Feat: ", real_feat.shape)
         print("Seq Feat: ", features_.shape)
 
-        data_factory = DataFactory(
-            real_data=real_data,
-            seq_data=seq_data,
-            features_=features_,
-            real_feat=real_feat)
+        data_factory = DataFactory(real_data=real_data,
+                                   seq_data=seq_data,
+                                   features_=features_,
+                                   real_feat=real_feat)
 
         config = Training_config()
         config.show()
@@ -246,8 +236,8 @@ def main(_):
 
 if __name__ == '__main__':
     if os.path.exists(FLAGS.folder_path):
-        ans = input(
-            '"%s" will be removed!! are you sure (y/N)? ' % FLAGS.folder_path)
+        ans = input('"%s" will be removed!! are you sure (y/N)? ' %
+                    FLAGS.folder_path)
         if ans == 'Y' or ans == 'y':
             # when not restore, remove follows (old) for new training
             shutil.rmtree(FLAGS.folder_path)

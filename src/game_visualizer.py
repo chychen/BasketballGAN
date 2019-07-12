@@ -63,7 +63,7 @@ def plot_data(data, length, file_path=None, if_save=False, fps=6, dpi=128):
     Return
     ------
     """
-    court = plt.imread("../Data/court.png")  # 500*939
+    court = plt.imread("court.png")  # 500*939
     name_list = [
         'A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5', '0'
     ]
@@ -92,20 +92,19 @@ def plot_data(data, length, file_path=None, if_save=False, fps=6, dpi=128):
 
     # annotations on circles
     annotations = [
-        ax.annotate(
-            name_list[i],
-            xy=[0., 0.],
-            horizontalalignment='center',
-            verticalalignment='center',
-            fontweight='bold') for i in range(11)
+        ax.annotate(name_list[i],
+                    xy=[0., 0.],
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontweight='bold') for i in range(11)
     ]
     # animation
-    anim = animation.FuncAnimation(
-        fig,
-        update_all,
-        fargs=(player_circles, ball_circle, annotations, data),
-        frames=length,
-        interval=100)
+    anim = animation.FuncAnimation(fig,
+                                   update_all,
+                                   fargs=(player_circles, ball_circle,
+                                          annotations, data),
+                                   frames=length,
+                                   interval=100)
 
     plt.imshow(court, zorder=0, extent=[0, 100 - 6, 50, 0])
     if if_save:
@@ -129,47 +128,35 @@ def test():
     train_data = data_factory.fetch_ori_data()
     train_data = data_factory.recover_data(train_data)
     for i in range(opt.amount):
-        plot_data(
-            results_data[i:i + 1],
-            length=100,
-            file_path=opt.save_path + 'play_' + str(i) + '.mp4',
-            if_save=opt.save)
-
-    # cmd e.g. python game_visualizer.py --data_path='../../data/collect/results_A_fake_B.npy' --save_path='../../data/collect/cond1/'
-    # results_data = np.load(opt.data_path)
-    # print(results_data.shape)
-
-    # for i in range(opt.amount):
-    #     plot_data(results_data[i, 1:2], length=100,
-    #               file_path=opt.save_path + 'play_' + str(i) + '.mp4', if_save=opt.save)
-    # print('opt.save', opt.save)
-    # print('opt.amount', opt.amount)
-    # print('opt.seq_length', opt.seq_length)
-    # print('opt.save_path', opt.save_path)
+        plot_data(results_data[i:i + 1],
+                  length=100,
+                  file_path=opt.save_path + 'play_' + str(i) + '.mp4',
+                  if_save=opt.save)
 
 
 if __name__ == '__main__':
     # parameters
     parser = argparse.ArgumentParser(description='NBA Games visulization')
-    parser.add_argument(
-        '--save', type=bool, default=True, help='bool, if save as gif file')
-    parser.add_argument(
-        '--amount',
-        type=int,
-        default=100,
-        help='how many event do you want to plot')
-    parser.add_argument(
-        '--seq_length', type=int, default=100, help='how long for each event')
-    parser.add_argument(
-        '--save_path',
-        type=str,
-        default='../../data/',
-        help='string, path to save event animation')
-    parser.add_argument(
-        '--data_path',
-        type=str,
-        default='../../data/FEATURES-4.npy',
-        help='string, path of target data')
+    parser.add_argument('--save',
+                        type=bool,
+                        default=True,
+                        help='bool, if save as gif file')
+    parser.add_argument('--amount',
+                        type=int,
+                        default=100,
+                        help='how many event do you want to plot')
+    parser.add_argument('--seq_length',
+                        type=int,
+                        default=100,
+                        help='how long for each event')
+    parser.add_argument('--save_path',
+                        type=str,
+                        default='../../data/',
+                        help='string, path to save event animation')
+    parser.add_argument('--data_path',
+                        type=str,
+                        default='../../data/FEATURES-4.npy',
+                        help='string, path of target data')
 
     opt = parser.parse_args()
     if not os.path.exists(opt.save_path):

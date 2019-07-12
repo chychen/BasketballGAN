@@ -32,6 +32,8 @@ In [ACMMM 2019](https://www.acmmm.org/2019/).
 nctu_cgvlab_bballgan$ docker login nvcr.io
 nctu_cgvlab_bballgan$ docker pull nvcr.io/nvidia/tensorflow:19.06-py2
 nctu_cgvlab_bballgan$ docker run --runtime=nvidia -it --rm -v $PWD:$PWD nvcr.io/nvidia/tensorflow:19.06-py2 bash
+root@c63207c81408:~/nctu_cgvlab_bballgan$ apt update
+root@c63207c81408:~/nctu_cgvlab_bballgan$ apt install ffmpeg
 ```
 
 ### Download Dataset 
@@ -59,9 +61,9 @@ nctu_cgvlab_bballgan/src$ tensorboard --logdir='tmp/Log'
 ### Logs/Samples/Checkpoints
 
 ```bash
-- "nctu_cgvlab_bballgan/src/tmp/Log": training summary for tensorboard
-- "nctu_cgvlab_bballgan/src/tmp/Samples": generated videos sampled on different iterations
-- "nctu_cgvlab_bballgan/src/tmp/Checkpoints": tensorflow checkpoints on different iterations
+- "nctu_cgvlab_bballgan/src/tmp/Log": training summary for tensorboard.
+- "nctu_cgvlab_bballgan/src/tmp/Samples": generated videos sampled on different epoches.
+- "nctu_cgvlab_bballgan/src/tmp/Checkpoints": tensorflow checkpoints on different iterations.
 ```
 
 ## Citation (TODO)
