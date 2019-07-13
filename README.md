@@ -31,7 +31,7 @@ In [ACMMM 2019](https://www.acmmm.org/2019/).
 ~$ cd nctu_cgvlab_bballgan
 nctu_cgvlab_bballgan$ docker login nvcr.io
 nctu_cgvlab_bballgan$ docker pull nvcr.io/nvidia/tensorflow:19.06-py2
-nctu_cgvlab_bballgan$ docker run --runtime=nvidia -it --rm -v $PWD:$PWD nvcr.io/nvidia/tensorflow:19.06-py2 bash
+nctu_cgvlab_bballgan$ docker run --runtime=nvidia -it --rm -v $PWD:$PWD --net host nvcr.io/nvidia/tensorflow:19.06-py2 bash
 root@c63207c81408:~/nctu_cgvlab_bballgan$ apt update
 root@c63207c81408:~/nctu_cgvlab_bballgan$ apt install ffmpeg
 ```
@@ -52,12 +52,6 @@ nctu_cgvlab_bballgan$ cd src
 nctu_cgvlab_bballgan/src$ python Train_Triple.py --folder_path='tmp' --data_path='data'
 ```
 
-### Monitoring
-
-```bash
-nctu_cgvlab_bballgan/src$ tensorboard --logdir='tmp/Log'
-```
-
 ### Logs/Samples/Checkpoints
 
 ```bash
@@ -65,6 +59,25 @@ nctu_cgvlab_bballgan/src$ tensorboard --logdir='tmp/Log'
 - "nctu_cgvlab_bballgan/src/tmp/Samples": generated videos sampled on different epoches.
 - "nctu_cgvlab_bballgan/src/tmp/Checkpoints": tensorflow checkpoints on different iterations.
 ```
+
+### Monitoring
+
+- Sampled Videos
+    - Using Simple HTTP Server to monitor sampled videos while training.
+    - [Simple HTTP Server (http://127.0.0.1:8000)](http://127.0.0.1:8000/tmp/Log/Samples)
+
+```bash
+nctu_cgvlab_bballgan/src$ python -m http.server 8000
+```
+
+- Training Logs
+    - [Tensorboard (127.0.0.1:6006)](http://127.0.0.1:6006)
+
+```bash
+nctu_cgvlab_bballgan/src$ tensorboard --logdir='tmp/Log'
+```
+
+<img src="https://drive.google.com/uc?export=view&id=10NNSibWbU0oMr9ziaQeOcgft44NwBVf2" width="600" title="Earth Moving Distance"/>
 
 ## Citation (TODO)
 If you find this useful for your research, please use the following.
