@@ -6,7 +6,7 @@
 
 <img align="right" src="https://drive.google.com/uc?export=view&id=1QWN9BtFgaAKA1tvx_ePQku934CeCWIRl" width="500" title="A Generated Play"/>
 
-## [Paper](TODO) | [Video](https://drive.google.com/uc?export=view&id=1Ead1EyHdPIFFsDtanQ91w8ha-SPRkM6E) | [Supplemental](https://drive.google.com/a/nvidia.com/file/d/1dXMA_1AjpPu7J4_Iw1yb6pp-9d9Lp2uN/view?usp=sharing)
+## [Paper](TODO) | [Video](https://drive.google.com/uc?export=view&id=1Ead1EyHdPIFFsDtanQ91w8ha-SPRkM6E) | [Supplemental](https://drive.google.com/a/nvidia.com/file/d/1dXMA_1AjpPu7J4_Iw1yb6pp-9d9Lp2uN/view?usp=sharing) | [CGVLab](https://people.cs.nctu.edu.tw/~yushuen/)
 
 ### BasketballGAN: Generating Basketball Play Simulation through Sketching
 
