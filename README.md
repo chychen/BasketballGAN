@@ -68,14 +68,14 @@ BasketballGAN/src$ python Train_Triple.py --folder_path='tmp' --data_path='data'
     - [Simple HTTP Server (http://127.0.0.1:8000)](http://127.0.0.1:8000/tmp/Log/Samples)
 
 ```bash
-nctu_cgvlab_bballgan/src$ python -m http.server 8000
+BasketballGAN/src$ python -m http.server 8000
 ```
 
 - Training Logs
     - [Tensorboard (127.0.0.1:6006)](http://127.0.0.1:6006)
 
 ```bash
-nctu_cgvlab_bballgan/src$ tensorboard --logdir='tmp/Log'
+BasketballGAN/src$ tensorboard --logdir='tmp/Log'
 ```
 
 <img src="https://drive.google.com/uc?export=view&id=10NNSibWbU0oMr9ziaQeOcgft44NwBVf2" width="600" title="Earth Moving Distance"/>
