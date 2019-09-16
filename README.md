@@ -27,13 +27,13 @@ In [ACMMM 2019](https://www.acmmm.org/2019/).
 ## Getting Stated # TODO
 
 ```bash
-~$ git clone https://gitlab-master.nvidia.com/dl/sae-taiwan/nctu_cgvlab_bballgan.git
-~$ cd nctu_cgvlab_bballgan
-nctu_cgvlab_bballgan$ docker login nvcr.io
-nctu_cgvlab_bballgan$ docker pull nvcr.io/nvidia/tensorflow:19.06-py2
-nctu_cgvlab_bballgan$ docker run --runtime=nvidia -it --rm -v $PWD:$PWD --net host nvcr.io/nvidia/tensorflow:19.06-py2 bash
-root@c63207c81408:~/nctu_cgvlab_bballgan$ apt update
-root@c63207c81408:~/nctu_cgvlab_bballgan$ apt install ffmpeg
+~$ git clone https://github.com/chychen/BasketballGAN.git
+~$ cd BasketballGAN
+BasketballGAN$ docker login nvcr.io
+BasketballGAN$ docker pull nvcr.io/nvidia/tensorflow:19.06-py2
+BasketballGAN$ docker run --runtime=nvidia -it --rm -v $PWD:$PWD --net host nvcr.io/nvidia/tensorflow:19.06-py2 bash
+root@c63207c81408:~/BasketballGAN$ apt update
+root@c63207c81408:~/BasketballGAN$ apt install ffmpeg
 ```
 
 ### Download Dataset 
@@ -42,22 +42,22 @@ root@c63207c81408:~/nctu_cgvlab_bballgan$ apt install ffmpeg
 - save [dataset](https://drive.google.com/a/nvidia.com/file/d/1955WfjX2xtHVb6QAJ70zLQH65V0JD_e3/view?usp=sharing) under folder 'data'
 
 ```bash
-nctu_cgvlab_bballgan$ mkdir data
+BasketballGAN$ mkdir data
 ```
 
 ### Training
 
 ```bash
-nctu_cgvlab_bballgan$ cd src
-nctu_cgvlab_bballgan/src$ python Train_Triple.py --folder_path='tmp' --data_path='data'
+BasketballGAN$ cd src
+BasketballGAN/src$ python Train_Triple.py --folder_path='tmp' --data_path='data'
 ```
 
 ### Logs/Samples/Checkpoints
 
 ```bash
-- "nctu_cgvlab_bballgan/src/tmp/Log": training summary for tensorboard.
-- "nctu_cgvlab_bballgan/src/tmp/Samples": generated videos sampled on different epoches.
-- "nctu_cgvlab_bballgan/src/tmp/Checkpoints": tensorflow checkpoints on different iterations.
+- "BasketballGAN/src/tmp/Log": training summary for tensorboard.
+- "BasketballGAN/src/tmp/Samples": generated videos sampled on different epoches.
+- "BasketballGAN/src/tmp/Checkpoints": tensorflow checkpoints on different iterations.
 ```
 
 ### Monitoring
