@@ -1,4 +1,5 @@
 # BasketballGAN
+
 ### Generate the ghosting defensive strategies given offensive sketch.
 
 ![](https://drive.google.com/uc?export=view&id=1lmxvBG-PTLg4vhEF_hmG1IS20vDEyvyv)
@@ -24,7 +25,7 @@ In [ACMMM 2019](https://www.acmmm.org/2019/).
 
 ### Dataset
 
-## Getting Stated # TODO
+## Getting Stated
 
 ```bash
 ~$ git clone https://github.com/chychen/BasketballGAN.git
@@ -79,7 +80,7 @@ nctu_cgvlab_bballgan/src$ tensorboard --logdir='tmp/Log'
 
 <img src="https://drive.google.com/uc?export=view&id=10NNSibWbU0oMr9ziaQeOcgft44NwBVf2" width="600" title="Earth Moving Distance"/>
 
-## Citation (TODO)
+## Citation
 If you find this useful for your research, please use the following.
 
 ``` 
