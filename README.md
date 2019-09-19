@@ -6,13 +6,15 @@
 
 <img align="right" src="https://drive.google.com/uc?export=view&id=1QWN9BtFgaAKA1tvx_ePQku934CeCWIRl" width="500" title="A Generated Play"/>
 
-## [Paper](https://arxiv.org/abs/1909.07088) | [CGVLab](https://people.cs.nctu.edu.tw/~yushuen/)<br>[Video](https://drive.google.com/uc?export=view&id=1Ead1EyHdPIFFsDtanQ91w8ha-SPRkM6E) | [Supplemental](https://drive.google.com/a/nvidia.com/file/d/1dXMA_1AjpPu7J4_Iw1yb6pp-9d9Lp2uN/view?usp=sharing)
+## [Paper](https://arxiv.org/abs/1909.07088) | [CGVLab](https://people.cs.nctu.edu.tw/~yushuen/)<br>[Video](https://youtu.be/NTir0-znPyw) | [Supplemental](https://drive.google.com/a/nvidia.com/file/d/1dXMA_1AjpPu7J4_Iw1yb6pp-9d9Lp2uN/view?usp=sharing)
 
 ### BasketballGAN: Generating Basketball Play Simulation through Sketching
 
 Hsin-Ying Hsieh<sup>1</sup>, Chieh-Yu Chen<sup>2</sup>, Yu-Shuen Wang<sup>1</sup> and Jung-Hong Chuang<sup>1</sup>
 
-<sup>1</sup>National Chiao Tung University, <sup>2</sup>NVIDIA Corporation
+<sup>1</sup>National Chiao Tung University, 
+
+<sup>2</sup>NVIDIA Corporation
 
 In [ACMMM 2019](https://www.acmmm.org/2019/).
 
