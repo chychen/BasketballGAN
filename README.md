@@ -16,7 +16,7 @@ Hsin-Ying Hsieh<sup>1</sup>, Chieh-Yu Chen<sup>2</sup>, Yu-Shuen Wang<sup>1</sup
 
 <sup>2</sup>NVIDIA Corporation
 
-In [ACMMM 2019](https://www.acmmm.org/2019/).
+Accepted paper in [ACMMM 2019](https://www.acmmm.org/2019/).
 
 ## Prerequisites
 
@@ -86,10 +86,10 @@ BasketballGAN/src$ tensorboard --logdir='tmp/Log'
 If you find this useful for your research, please use the following.
 
 ``` 
-@inproceedings{hsieh2019basketballgan,
-    title={BasketballGAN: Generating Basketball Play Simulation through Sketching},
-    author={Hsin-Ying Hsieh, Chieh-Yu Chen, Yu-Shuen Wang and Jung-Hong Chuang},  
-    booktitle={2019 ACM Multimedia Conference on Multimedia Conference},
-    year={2019}
+@article{hsieh2019basketballgan,
+  title={BasketballGAN: Generating Basketball Play Simulation Through Sketching},
+  author={Hsieh, Hsin-Ying and Chen, Chieh-Yu and Wang, Yu-Shuen and Chuang, Jung-Hong},
+  journal={arXiv preprint arXiv:1909.07088},
+  year={2019}
 }
 ```
