@@ -5,8 +5,9 @@
 ![](https://drive.google.com/uc?export=view&id=1lmxvBG-PTLg4vhEF_hmG1IS20vDEyvyv)
 
 <img align="right" src="https://drive.google.com/uc?export=view&id=1QWN9BtFgaAKA1tvx_ePQku934CeCWIRl" width="500" title="A Generated Play"/>
+<img align="right" src="https://drive.google.com/uc?export=view&id=1W4h1WA4Lp1c_BrTmPBPwvF1Udf7SdzLO" width="500" title="A Generated Play"/>
 
-## [Paper](https://arxiv.org/abs/1909.07088) | [CGVLab](https://people.cs.nctu.edu.tw/~yushuen/)<br>[Video](https://youtu.be/NTir0-znPyw) | [Supplemental](https://drive.google.com/a/nvidia.com/file/d/1dXMA_1AjpPu7J4_Iw1yb6pp-9d9Lp2uN/view?usp=sharing)<br>[AAAS Science News](https://www.sciencemag.org/news/2019/09/watch-ai-help-basketball-coaches-outmaneuver-opposing-team)
+## [Paper](https://arxiv.org/abs/1909.07088) | [CGVLab](https://people.cs.nctu.edu.tw/~yushuen/)<br>[Video](https://youtu.be/NTir0-znPyw) | [Supplemental](https://drive.google.com/a/nvidia.com/file/d/1dXMA_1AjpPu7J4_Iw1yb6pp-9d9Lp2uN/view?usp=sharing)
 
 ### BasketballGAN: Generating Basketball Play Simulation through Sketching
 
@@ -81,6 +82,11 @@ BasketballGAN/src$ tensorboard --logdir='tmp/Log'
 ```
 
 <img src="https://drive.google.com/uc?export=view&id=10NNSibWbU0oMr9ziaQeOcgft44NwBVf2" width="600" title="Earth Moving Distance"/>
+
+### Public Relations
+
+- [AAAS Science News](https://www.sciencemag.org/news/2019/09/watch-ai-help-basketball-coaches-outmaneuver-opposing-team)
+- [Deeplearning.ai FB](https://www.facebook.com/deeplearningHQ/posts/1431901466962064)
 
 ## Citation
 If you find this useful for your research, please use the following.
