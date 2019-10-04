@@ -26,8 +26,6 @@ Accepted paper in [ACMMM 2019](https://www.acmmm.org/2019/).
 - [NVIDIA NGC Tensorflow Docker Image](https://ngc.nvidia.com/catalog/containers/nvidia:tensorflow)
 - NVIDIA GPU (V100 16GB)
 
-### Dataset
-
 ## Getting Stated
 
 ```bash
