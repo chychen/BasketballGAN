@@ -87,6 +87,7 @@ BasketballGAN/src$ tensorboard --logdir='tmp/Log'
 - [AAAS Science News](https://www.sciencemag.org/news/2019/09/watch-ai-help-basketball-coaches-outmaneuver-opposing-team)
 - [Deeplearning.ai FB](https://www.facebook.com/deeplearningHQ/posts/1431901466962064)
 - [Deeplearning.ai The Batch](https://info.deeplearning.ai/the-batch-google-achieves-quantum-supremacy-amazon-aims-to-sway-lawmakers-ai-predicts-basketball-plays-face-detector-preserves-privacy)
+- [NVIDIA GTC 2020 Poster](https://www.nvidia.com/content/dam/en-zz/Solutions/gtc/conference-posters/gtc2020-posters/Deep_Learning_Data_Science_05_P21206_Jay_Chen_Web.pdf)
 
 ## Citation
 If you find this useful for your research, please use the following.
