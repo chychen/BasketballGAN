@@ -12,7 +12,7 @@ docker run -it --rm -v /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):$(pwd) -w $(pwd) 
 
 ### Dataset
 
-- [link](https://drive.google.com/a/nvidia.com/file/d/1955WfjX2xtHVb6QAJ70zLQH65V0JD_e3/view?usp=sharing)
+- [link](https://drive.google.com/drive/folders/1pa_ZDgoMWWEV8smQZrA1j9nSN7XJB8mI?usp=sharing)
 - unzip then put under the path 'BasketballGAN/UI/Data/Model_data/'
 
 ### checkpoints
