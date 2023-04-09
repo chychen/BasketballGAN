@@ -42,7 +42,7 @@ root@c63207c81408:~/BasketballGAN$ apt install ffmpeg
 ### Download Dataset 
 
 - create 'data' folder
-- save [dataset](https://drive.google.com/file/d/12DRJBIyN20vwRyfywvCXo-nNDf0UBPjZ/view?usp=sharing) under folder 'data'
+- save [dataset](https://drive.google.com/drive/folders/1uNPw7LOA3xENclQRtSlUftiR7tlVNOts?usp=share_link) under folder 'data'
 
 ```bash
 BasketballGAN$ mkdir data
